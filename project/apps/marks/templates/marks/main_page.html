@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Выставление и просмотр оценок{% endblock %}
+
+{% block content %}
+  <div class="main_container">
+    <div class="filter_container">
+      <div class="filter">
+        <h6 class="filter_label">Кампус</h6>
+        <div>
+          {% for campus in campuses %}
+            <button class="button">{{ campus }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="filter">
+        <h6 class="filter_label">Класс</h6>
+        <div>
+          {% for class in classes %}
+            <button class="button">{{ class }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="filter">
+        <h6 class="filter_label">Предмет</h6>
+        <div>
+          {% for subject in subjects %}
+            <button class="button">{{ subject }}</button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="students_and_tests_container">
+      <div class="students_table_container">
+        <table class="students_table">
+          <caption>Посещаемость</caption>
+          <thead>
+            <tr>
+              <th rowspan="2">Ученики</th>
+              <th colspan="{{ dates|length }}">Даты</th>
+            </tr>
+            <tr>
+              {% for date in dates %}
+                <th>{{ date }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+              <tr>
+                <td>{{ student.surname }} {{ student.name }}</td>
+                {% for date in dates %}
+                  <td> </td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      
+      <table class="tests_list">
+        <caption>Проверочные</caption>
+        <thead>
+          <th>Название</th>
+          <th>Дата</th>
+        </thead>
+        <tbody>
+          {% for test in tests %}
+            <tr>
+              <td><a class="link_to_test_page" href="url_to_test_page/{{ test.id }}">{{ test.name }}</a></td>
+              {% if test.date %}
+                <td>{{ test.date|date:"j b Y" }}</td>
+              {% else %}
+                <td>-</td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
