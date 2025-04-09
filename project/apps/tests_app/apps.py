@@ -1,0 +1,7 @@
+from django.apps import AppConfig
+
+
+class TestsAppConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.tests_app"
+    verbose_name = "Выставление и просмотр оценок за проверочные"

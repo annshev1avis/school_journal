@@ -7,8 +7,20 @@
     <link href="{% static "css/styles.css" %}" rel="stylesheet" type="text/css"/>
   </head>
   <body>
+    <header class="header">
+      <div class="header-container">
+        <nav>
+          <ul class="nav_list">
+            <li class="nav_link"><a href="">Проверочные</a></li>
+            <li class="nav_link"><a href="">Личные отчёты</a></li>
+            <li class="nav_link"><a href="">Посещаемость</a></li>
+            <li class="nav_link"><a href="">Самостоятельная работа</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
     {% block content %}
-      <h1>Нет контента, значит что-то в приложении написано некорректно :)</h1>
+      <h1>Нет контента, значит в приложении что-то не работает :)</h1>
     {% endblock %}
   </body>
 </html>

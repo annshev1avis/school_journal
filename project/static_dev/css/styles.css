@@ -13,95 +13,26 @@
 }
 
 body{
-    max-width: 100vw;
     background-color: #F1F1F1;
     font-family: "Inter", Arial, Helvetica, sans-serif;
-}
-
-table{
-    border-top: 7px solid #AD4AFF;
-    box-sizing: border-box;
-    border-collapse: collapse;
-}
-
-caption {
-    text-align: left;
-    font-weight: 600;
-    font-size: 15pt;
-    margin-bottom: 5px;
-}
-
-th, td{
-    border: 1px solid black;
-    padding: 5px;
-    text-align: left;
-}
-
-.main_container {
-    background-color: red;
-    max-width: 95%;
-    margin: 20px 100px 40px;
-}
-
-.filter_container{
-    margin-bottom: 45px;
-}
-
-.filter{
-    margin: 0px 0px 10px;
-}
-
-.filter_label{
-    font-size: 10pt;
-    font-weight: 500;
-    margin-bottom: 5px;
-}
-
-.active_button{
-    padding: 4px 10px 4px;
-    background-color: #AD4AFF;
-    border-radius: 5px;
-}
-
-.button{
-    padding: 4px 10px 4px;
-    background-color: #cecccc;
-    border-radius: 5px;
-    border: 2px solid transparent;
-}
-
-.button:hover{
-    background-color: #cd90ff;
-    border: 2px solid #AD4AFF;
-}
-
-.button:active{
-    background-color: #AD4AFF;
-}
-
-.students_and_tests_container{
-    max-width: 100%;
-    background-color: yellow;
-    display: flex;
-    flex-direction: row;
-    gap: 100px;
-}
-
-.students_table_container{
-    background-color: green;
-    overflow: auto;
-}
-
-.link_to_test_page{
-    text-decoration: none;
     color: black;
 }
 
-.tests_list tr:hover{
-    color: #8000e8;
-    cursor: pointer;
+a{
+    text-decoration: none;
 }
 
-.tests_list tr:hover a {
-    color: inherit;
+.header{
+    background-color: white;
+    box-shadow: inset;
+}
+
+.nav_list{
+    display: flex;
+    flex-direction: row;
+    gap: 30px;
+}
+
+.nav_link{
+    list-style: none;
 }
