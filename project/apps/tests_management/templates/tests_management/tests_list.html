@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Управление проверочными{% endblock %}
+{% block content %}
+  <div class="list">
+  {% for test in tests %}
+    <a href="">
+      <div class="card">
+        <div style="margin-bottom: 20px">
+          <h3>{{ test.studing_year }} класс</h3>
+          <h3>{{ test.subject.name }}</h3>
+          <h3>{{ test.name }}</h3>
+          <h5 style="margin-top: 10px">{{ test.last_update_date }}</h5>
+        </div>
+        <div>
+          <h3>Назначен(а) классам:</h3>
+          <h3>
+            {% for group in test.groups.all %}
+              {{ group.studing_year }}{{ group.letter }}, 
+            {% empty %}
+              -
+            {% endfor %}
+          </h3>
+        </div>
+      </div>
+    </a>
+  {% endfor %}
+  </div>
+  <a class="button" href="{% url "tests_management:create_test" %}">Создать</a>
+{% endblock %}

@@ -1,9 +1,8 @@
 from django.db import models
 from django.conf import settings
+from django.urls import reverse
 
-
-class Subject(models.Model):
-    name = models.CharField(max_length=30)
+import apps.core.models
 
 
 class Test(models.Model):
@@ -12,10 +11,12 @@ class Test(models.Model):
         max_length=100,
     )
     subject = models.ForeignKey(
-        Subject, on_delete=models.PROTECT, verbose_name="предмет"
+        apps.core.models.Subject,
+        on_delete=models.PROTECT,
+        verbose_name="предмет"
     )
     studing_year = models.IntegerField(
-        "год обучения",
+        "для какого класса",
         choices={
             (1, 1),
             (2, 2),
@@ -29,11 +30,12 @@ class Test(models.Model):
     )
     creator = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         verbose_name="составитель",
+        null=True,
     )
-    classes = models.ManyToManyField(
-        "tests_app.Group",
+    groups = models.ManyToManyField(
+        apps.core.models.Group,
         through="TestAssign",
         verbose_name="классы, которые будут писать эту проверочную",
     )
@@ -42,10 +44,13 @@ class Test(models.Model):
         verbose_name = "проверочная"
         verbose_name_plural = "проверочные"
 
+    def __str__(self):
+        return f"{self.name} {self.studing_year} класс"
+
 
 class TestAssign(models.Model):
     group = models.ForeignKey(
-        "tests_app.Group",
+        apps.core.models.Group,
         on_delete=models.CASCADE,
         verbose_name="класс, которому назначен тест",
     )
@@ -56,7 +61,15 @@ class TestAssign(models.Model):
     )
     writing_date = models.DateField(
         "дата написания",
+        null=True,
     )
+
+    class Meta:
+        verbose_name = "планирование проверочной"
+        verbose_name_plural = "планирование проверочных"
+
+    def __str__(self):
+        return f"{self.group} - {self.test}"
 
 
 class Task(models.Model):
@@ -79,3 +92,10 @@ class Task(models.Model):
     max_points = models.IntegerField(
         "максимальное количество баллов",
     )
+
+    class Meta:
+        verbose_name = "задание"
+        verbose_name_plural = "задания"
+
+    def __str__(self):
+        return f"задание №{self.id}"

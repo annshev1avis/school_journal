@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Новая работа{% endblock %}
+
+{% block script %}
+  <script src="{% static "js/jquery-3.7.1.js" %}"></script>
+  <script src="{% static "js/jquery.formset.js" %}"></script>
+  <script type="text/javascript">
+    $(function() {
+      $('#test_with_tasks_form tbody tr').formset();
+    })
+  </script>
+{% endblock %}
+
+{% block content %}
+{% if form.errors %}
+{% for error in form.non_field_errors %}
+  <h5 class="">{{ error|escape }}</h5>
+{% endfor %}
+{% endif %}
+
+<form id="test_with_tasks_form" method="post">
+  {% csrf_token %}
+  {% for field in test_form %}
+    <div class="form-field">
+      <label for="{{ field.id_for_label }}" class="form-label">
+        {{ field.label }}
+      </label>
+      {{ field }}
+    </div>
+  {% endfor %}
+
+  {{ task_formset.management_form }}
+  <table class="add-tasks-table">
+    <colgroup>
+      <col span="2" class="num-col"/>
+      <col class="skill-col"/>
+      <col class="max-points-col"/>
+    </colgroup>
+    <caption>Задания</caption>
+    <thead>
+      <tr>
+        <th>Номер</th>
+        <th>Подномер (необяз.)</th>
+        <th>Проверяемый навык</th>
+        <th>Макс. количество баллов</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for form in task_formset %}
+        <tr>
+          <td class="form-field">{{ form.num }}</td>
+          <td class="form-field">{{ form.sub_num }}</td>
+          <td class="form-field">{{ form.checked_skill }}</td>
+          <td class="form-field">{{ form.max_points }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <button type="submit" class="button">Сохранить</button>
+</form>
+{% endblock %}

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from django.forms.renderers import DjangoTemplates
 import dotenv
 
 
@@ -14,6 +15,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+
 INSTALLED_APPS = [
     # встроенные
     "django.contrib.admin",
@@ -22,13 +27,17 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # third party
+    "debug_toolbar",
     # созданные
+    "apps.core.apps.CoreConfig",
     "apps.tests_app.apps.TestsAppConfig",
     "apps.tests_management.apps.TestsManagementConfig",
     "apps.users.apps.UsersConfig",
 ]
 
 MIDDLEWARE = [
+    # встроенные
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -36,6 +45,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # third party
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
 ROOT_URLCONF = "project.urls"
