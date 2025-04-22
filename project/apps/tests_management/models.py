@@ -38,6 +38,7 @@ class Test(models.Model):
         apps.core.models.Group,
         through="TestAssign",
         verbose_name="классы, которые будут писать эту проверочную",
+        blank=True,
     )
 
     class Meta:
@@ -84,6 +85,7 @@ class Task(models.Model):
     sub_num = models.IntegerField(
         "подномер задания в проверочной",
         null=True,
+        blank=True,
     )
     checked_skill = models.CharField(
         "проверяемый навык",

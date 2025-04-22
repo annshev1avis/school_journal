@@ -20,5 +20,6 @@ TaskFormSet = forms.inlineformset_factory(
     extra=2,
     fields = [
         "num", "sub_num", "checked_skill", "max_points",
-    ]
+    ],
+    can_delete=True,
 )

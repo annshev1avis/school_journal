@@ -23,7 +23,7 @@
 
 <form id="test_with_tasks_form" method="post">
   {% csrf_token %}
-  {% for field in test_form %}
+  {% for field in form %}
     <div class="form-field">
       <label for="{{ field.id_for_label }}" class="form-label">
         {{ field.label }}
@@ -50,15 +50,35 @@
     </thead>
     <tbody>
       {% for form in task_formset %}
+        {% if form.errors %}
+          {% for error in form.non_field_errors %}
+          <h5 class="">{{ error|escape }}</h5>
+          {% endfor %}
+        {% endif %}
         <tr>
-          <td class="form-field">{{ form.num }}</td>
-          <td class="form-field">{{ form.sub_num }}</td>
-          <td class="form-field">{{ form.checked_skill }}</td>
-          <td class="form-field">{{ form.max_points }}</td>
+          <td class="form-field">
+            {{ form.num.errors }}
+            {{ form.num }}
+          </td>
+          <td class="form-field">
+            {{ form.sub_num.errors }}
+            {{ form.sub_num }}
+          </td>
+          <td class="form-field">
+            {{ form.checked_skill.errors }}
+            {{ form.checked_skill }}
+          </td>
+          <td class="form-field">
+            {{ form.max_points.errors }}
+            {{ form.max_points }}
+          </td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
   <button type="submit" class="button">Сохранить</button>
 </form>
+{% if add_delete_button %}
+  <a class="button">Удалить</a>
+{% endif %}
 {% endblock %}

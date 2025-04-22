@@ -3,7 +3,7 @@
 {% block content %}
   <div class="list">
   {% for test in tests %}
-    <a href="">
+    <a href="{% url 'tests_management:update_test' test.pk %}">
       <div class="card">
         <div style="margin-bottom: 20px">
           <h3>{{ test.studing_year }} класс</h3>
