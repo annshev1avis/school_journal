@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}
+{% endblock %}
+{% block content %}
+<table>
+  <colgroup>
+    <col class="students_col">
+    {% for task, subtasks in tasks_structure.items %}
+      <col class="task_col" span="{{ subtasks|length }}">
+    {% endfor %}
+  </colgroup>
+  <caption>Название теста</caption>
+  <thead>
+    <tr>
+      <th rowspan="2">Ученики</th>
+      {% for task, subtasks in tasks_structure.items %}
+        <th colspan="{{ subtasks|length }}">{{ task }}</th>
+      {% endfor %}
+    </tr>
+    <tr>
+      {% for subtasks in tasks_structure.values %}
+        {% for subtask in subtasks %}
+          <th>{{ subtask }}</th>
+        {% endfor %}
+      {% endfor %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for student in students %}
+      <tr>
+        <td>{{ student.surname }} {{ student.name }}</td>
+        {% for task in tasks %}
+          <td></td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -14,12 +14,19 @@ class TestForm(forms.ModelForm):
         }
 
 
+class TaskForm(forms.ModelForm):
+    class Meta:
+        model = models.Task  # Убедитесь, что импортировали модель Task
+        fields = ['id', 'num', 'sub_num', 'checked_skill', 'max_points']
+        widgets = {
+            'id': forms.HiddenInput,
+        }
+
+
 TaskFormSet = forms.inlineformset_factory(
     models.Test,
-    models.Task, 
-    extra=2,
-    fields = [
-        "num", "sub_num", "checked_skill", "max_points",
-    ],
+    models.Task,
+    form=TaskForm,
+    extra=0,
     can_delete=True,
 )

@@ -72,6 +72,17 @@ body {
     text-decoration: underline;
 }
 
+.messages_container{
+    margin: 10px 0px 10px;
+}
+
+.message{
+    border: 2px solid rgb(0, 197, 49);
+    border-radius: 5px;
+    background-color: rgb(119, 212, 142);
+    padding: 10px;
+}
+
 .list {
     display: flex;
     flex-direction: row;

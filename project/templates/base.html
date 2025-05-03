@@ -15,11 +15,12 @@
         <nav>
           <ul class="nav_list">
             <li>
-              <a class="nav_link {% link_is_active 'tests_management:tests_list' request %}" 
+              <a class="nav_link {% link_is_active '/tests_management/' request %}" 
               href="{% url "tests_management:tests_list" %}">
               Управление проверочными</a>
             </li>
-            <li><a class="nav_link" href="">Проверочные</a></li>
+            <li><a class="nav_link {% link_is_active '/tests/' request %}"
+              href="">Проверочные</a></li>
             <li><a class="nav_link" href="">Личные отчёты</a></li>
             <li><a class="nav_link" href="">Самостоятельные работы</a></li>
             <li><a class="nav_link" href="">Аналитика</a></li>
@@ -28,6 +29,7 @@
       </div>
     </header>
     <main class="main">
+      {% include "includes/messages.html" %}
       <div class="main-container">
         {% block content %}
           <h1>Нет контента, значит в приложении что-то не работает :)</h1>

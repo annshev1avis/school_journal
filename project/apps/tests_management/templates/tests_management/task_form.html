@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block content %}
+  <form action="{% url test_management:update_task %}" method="post">
+    <input type="submit">Сохранить</input>
+  </form>
+{% endblock %}
