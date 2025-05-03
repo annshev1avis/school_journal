@@ -17,60 +17,34 @@ class TestListView(generic.ListView):
 
 
 # операции с отдельным тестом
-class TestWithTasksCreateView(generic.CreateView):
+class TestCreateView(generic.CreateView):
     model = models.Test
-    template_name = "tests_management/test_form.html"
+    template_name = "tests_management/create_test.html"
     form_class = forms.TestForm
-    success_url = reverse_lazy("tests_management:tests_list")
     
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["task_formset"] = self.get_task_formset()
-        return context
-    
-    def get_task_formset(self):
-        return forms.TaskFormSet(
-            self.request.POST 
-            if self.request.POST
-            else None
+    def get_success_url(self):
+        return reverse_lazy(
+            "tests_management:update_test",
+            kwargs={"pk": self.object.pk}
         )
-    
-    def form_valid(self, form, task_formset):
-        response = super().form_valid(form)
-        
-        test = self.object
-        task_formset.instance = test
-        task_formset.save()
-        
-        return response
 
-    def post(self, request, *args, **kwargs):
-        self.object = None
-        
-        test_form = self.get_form()
-        task_formset = self.get_task_formset()
-        
-        if test_form.is_valid() and task_formset.is_valid():
-            return self.form_valid(test_form, task_formset)
-        else:
-            return self.form_invalid(test_form)
-        
 
 class TestWithTasksUpdateView(generic.View):
-    template_name = "tests_management/test_form.html"
+    template_name = "tests_management/update_test.html"
     
     def get(self, request, pk):
         test = get_object_or_404(models.Test, pk=pk)
         
         test_form = forms.TestForm(instance=test)
-        task_formset = forms.TaskFormSet(instance=test)
+        tasks_formset = forms.TaskFormSet(instance=test, queryset=test.tasks)
     
         return render(
             request,
             self.template_name,
             {
+                "test_pk": test.pk,
                 "form": test_form,
-                "task_formset": task_formset,
+                "tasks_formset": tasks_formset,
                 "uniq_stamp": random.random()
             }
         )
@@ -79,22 +53,23 @@ class TestWithTasksUpdateView(generic.View):
         test = get_object_or_404(models.Test, pk=pk)
         
         test_form = forms.TestForm(request.POST, instance=test)
-        task_formset = forms.TaskFormSet(request.POST, instance=test)
+        tasks_formset = forms.TaskFormSet(request.POST, instance=test, queryset=test.tasks)
         
-        if test_form.is_valid() and task_formset.is_valid():
+        if test_form.is_valid() and tasks_formset.is_valid():
             test = test_form.save()
-            task_formset.save()
+            tasks_formset.save()
                 
             messages.success(request, "Изменения сохранены")
-            return redirect(reverse_lazy("tests_management:tests_list"))
+            return redirect(reverse_lazy("tests_management:update_test", kwargs={"pk": test.pk}))
         
         messages.error(request, "Ошибки при заполнении формы")
         return render(
             request,
             self.template_name,
             {
+                "test_pk": test.pk,
                 "form": test_form,
-                "task_formset": task_formset,
+                "tasks_formset": tasks_formset,
                 "uniq_stamp": random.random()
             }
         )
@@ -102,19 +77,30 @@ class TestWithTasksUpdateView(generic.View):
 
 class TestDeleteView(generic.DeleteView):
     model = models.Test
-    template_name = "test_confirm_delete.html"
-    success_url = reverse_lazy("tests_app:tests_list")
+    template_name = "tests_management/test_confirm_delete.html"
+    success_url = reverse_lazy("tests_management:tests_list")
 
 
 # операции с отдельным заданием
-class TaskUpdateView(generic.UpdateView):
+class TaskCreateView(generic.CreateView):
     model = models.Task
     fields = ["num", "sub_num", "checked_skill", "max_points"]
     template_name = "tests_management/task_form.html"
-    success_url = reverse_lazy("tests_management:update_test")
+    
+    def setup(self, request, *args, **kwargs):
+        # инициализация выполняется для всех типов запросов
+        super().setup(request, *args, **kwargs)
+        self.test = models.Test.objects.get(pk=kwargs["test_pk"])
+    
+    def form_valid(self, form):
+        form.instance.test = self.test
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy("tests_management:update_test", kwargs={"pk": self.object.test.pk})
 
-
-class TaskDeleteView(generic.DeleteView):
     model = models.Task
     template_name = "task_confirm_delete.html"
-    success_url = reverse_lazy("tests_management:update_test")
+    
+    def get_success_url(self):
+        return reverse_lazy("tests_management:update_test", kwargs={"pk": self.object.test.pk})

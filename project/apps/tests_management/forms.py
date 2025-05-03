@@ -16,7 +16,7 @@ class TestForm(forms.ModelForm):
 
 class TaskForm(forms.ModelForm):
     class Meta:
-        model = models.Task  # Убедитесь, что импортировали модель Task
+        model = models.Task
         fields = ['id', 'num', 'sub_num', 'checked_skill', 'max_points']
         widgets = {
             'id': forms.HiddenInput,

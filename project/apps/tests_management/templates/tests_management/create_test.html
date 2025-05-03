@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block title %}Новая работа{% endblock %}
+
+{% block content %}
+{% include "includes/form_errors.html" %}
+
+<form method="post">
+  {% csrf_token %}
+  {% include "includes/form_fields.html" %}
+  <button type="submit" class="button">Сохранить</button>
+</form>
+{% endblock %}

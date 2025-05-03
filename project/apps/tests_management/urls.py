@@ -7,7 +7,7 @@ app_name = "tests_management"
 
 urlpatterns = [
     path("", views.TestListView.as_view(), name="tests_list"),
-    path("create_test/", views.TestWithTasksCreateView.as_view(), name="create_test"),
+    path("create_test/", views.TestCreateView.as_view(), name="create_test"),
     path(
         "test/<int:pk>/update/",
         views.TestWithTasksUpdateView.as_view(),
@@ -19,13 +19,8 @@ urlpatterns = [
         name="delete_test",
     ),
     path(
-        "task/<int:pk>/update/",
-        views.TaskUpdateView.as_view(),
-        name="update_task",
-    ),
-    path(
-        "task/<int:pk>/delete/",
-        views.TaskDeleteView.as_view(),
-        name="delete_task",
+        "test/<int:test_pk>/task/create/",
+        views.TaskCreateView.as_view(),
+        name="create_task",
     ),
 ]

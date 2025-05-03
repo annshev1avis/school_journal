@@ -76,8 +76,9 @@ class TestAssign(models.Model):
 class Task(models.Model):
     test = models.ForeignKey(
         Test,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         verbose_name="к какому тесту относится",
+        related_name="tasks",
     )
     num = models.IntegerField(
         "номер задания в проверочной",

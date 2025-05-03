@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
-  <form action="{% url test_management:update_task %}" method="post">
-    <input type="submit">Сохранить</input>
+  <form method="post">
+    {% csrf_token %}
+    {% include "includes/form_fields.html" %}
+    <button type="submit" class="button">Сохранить</button>
   </form>
 {% endblock %}

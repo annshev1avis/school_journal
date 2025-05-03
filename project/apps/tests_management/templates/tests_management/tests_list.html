@@ -23,6 +23,8 @@
         </div>
       </div>
     </a>
+  {% empty %}
+    <h3>Список проверочных пуст, но вы можете их добавить</h3>
   {% endfor %}
   </div>
   <a class="button" href="{% url "tests_management:create_test" %}">Создать</a>
