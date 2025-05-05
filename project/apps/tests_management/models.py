@@ -1,6 +1,5 @@
 from django.db import models
 from django.conf import settings
-from django.urls import reverse
 
 import apps.core.models
 
@@ -63,6 +62,7 @@ class TestAssign(models.Model):
     writing_date = models.DateField(
         "дата написания",
         null=True,
+        blank=True,
     )
 
     class Meta:

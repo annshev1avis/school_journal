@@ -98,9 +98,3 @@ class TaskCreateView(generic.CreateView):
     
     def get_success_url(self):
         return reverse_lazy("tests_management:update_test", kwargs={"pk": self.object.test.pk})
-
-    model = models.Task
-    template_name = "task_confirm_delete.html"
-    
-    def get_success_url(self):
-        return reverse_lazy("tests_management:update_test", kwargs={"pk": self.object.test.pk})
