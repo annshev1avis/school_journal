@@ -19,6 +19,7 @@ class TaskSolution(models.Model):
     result = models.SmallIntegerField(
         "результат в баллах",
         null=True,
+        blank=True,
         default=None,
     )
 

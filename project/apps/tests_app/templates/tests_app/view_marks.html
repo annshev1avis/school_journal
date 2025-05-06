@@ -47,6 +47,16 @@
     </tr>
   </tfoot>
 </table>
+{% if students_without_results %}
+<table>
+  <caption>Ученики, которые не выполняли работу</caption>
+  <tbody>
+    {% for student in students_without_results %}
+      <td>{{ student.surname }} {{ student.name }}</td>
+    {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 <a class="button" href="{% url "tests_app:set_marks" test.id group.id %}">
   Перейти к выставлению оценок
 </a>

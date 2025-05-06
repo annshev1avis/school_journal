@@ -10,7 +10,10 @@
       <tr>
         <th rowspan="2">Ученики</th>
         {% for task in tasks %}
-          <th>{{ task.num }}{% if task.sub_num %}.{{ task.sub_num }}{% endif %}</th>
+          <th>
+            {{ task.num }}{% if task.sub_num %}.{{ task.sub_num }}{% endif %} 
+            (макс: {{ task.max_points }})
+          </th>
         {% endfor %}
       </tr>
     </thead>

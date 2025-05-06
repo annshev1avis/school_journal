@@ -1,5 +1,6 @@
 import datetime
 
+from django.contrib import messages
 from django.views import generic
 from django.shortcuts import render, redirect
 from django.db.models import Sum
@@ -86,6 +87,27 @@ class ResultsMatrix:
         
 
 class MarksView(generic.View):
+    def divide_students(self, students, tasks):
+        """
+        Во избежание ошибок отображения результатов в общей таблице
+        разделяет учеников, у которых выставлены все баллы и
+        у которых есть None в результатах теста.
+        """
+        with_results = []
+        without_results = []
+        
+        for student in students:
+            task_solutions = (
+                tests_app_models.TaskSolution
+                .objects.filter(student=student, task__in=tasks)
+            )
+            if all(task.result is not None for task in task_solutions):
+                with_results.append(student)
+            else:
+                without_results.append(student)
+        
+        return (with_results, without_results)
+    
     def get(self, request, test_id, group_id):
         students = (
             core_models.Student.objects.filter(group_id=group_id)
@@ -96,10 +118,14 @@ class MarksView(generic.View):
             .filter(test_id=test_id)
             .order_by("num", "sub_num")
         )
+        
+        students_with_result, students_without_results = (
+            self.divide_students(students, tasks)
+        )
         test_max_points = tasks.aggregate(total_max_points=Sum("max_points"))["total_max_points"]
         
         results_matrix = ResultsMatrix(
-            students,
+            students_with_result,
             tasks,
             test_max_points,
         )
@@ -112,6 +138,7 @@ class MarksView(generic.View):
                 "group": core_models.Group.objects.get(pk=group_id),
                 "tasks": tasks,
                 "results_matrix": results_matrix,
+                "students_without_results": students_without_results
             }
         )
 
@@ -181,8 +208,18 @@ class SetMarksView(generic.View):
         ]
         
         for formset in student_formsets:
-            if formset.is_valid():
-                formset.save()
+            if not formset.is_valid():
+                student = formset[0].instance.student
+                error_messages_str = (
+                    ''.join(error.message for error in formset.non_form_errors().data)
+                )
+                messages.error(
+                    request,
+                    f"Ошибка при заполнении '{student.surname} {student.name}': "
+                    f"{error_messages_str}"
+                )
+                return self.get(request, test_id, group_id)
+            formset.save()                
                 
         return redirect(
             reverse_lazy(
