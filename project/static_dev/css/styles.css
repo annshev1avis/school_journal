@@ -190,20 +190,20 @@ form {
     font-size: 0.85rem;
 }
 
-.add-tasks-table{
+table{
     border-collapse: collapse;
     width: 100%;
     border-top: 7px solid #bbbbbb;
     margin-bottom: 30px;
 }
 
-.add-tasks-table caption{
+caption{
     margin-bottom: 10px;
     text-align: left;
     font-size: 16pt;
 }
 
-.add-tasks-table th, td {
+th, td {
     background-color: white;
     border: 1px solid #bbbbbb;
     padding: 10px;

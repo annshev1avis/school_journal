@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}
+{% endblock %}
+{% block content %}
+<form method="POST">
+  {% csrf_token %}
+  <table>
+    <caption>{{ test.name }}. {{ group }}</caption>
+    <thead>
+      <tr>
+        <th rowspan="2">Ученики</th>
+        {% for task in tasks %}
+          <th>{{ task.num }}{% if task.sub_num %}.{{ task.sub_num }}{% endif %}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for student, tasks_formset in student_solutions_formsets.items %}
+        {{ tasks_formset.management_form }}
+        <tr>
+          <td>{{ student.surname }} {{ student.name }}</td>
+          {% for form in tasks_formset %}
+            <td>
+              {{ form.id.as_hidden }}
+              {{ form.student }}  
+              {{ form.task }}
+              {{ form.result }}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <button class="button" type="submit">Сохранить</button>
+</form>
+{% endblock %}

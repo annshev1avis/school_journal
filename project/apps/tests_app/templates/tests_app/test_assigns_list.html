@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Выставление оценок{% endblock %}
+{% block content %}
+<div class="list">
+  {% for test_assign in test_assigns %}
+    <a href="{% url 'tests_app:view_marks' test_assign.test.id test_assign.group.id %}">
+      <div class="card">
+        <h3>Класс: {{ test_assign.group }}</h3>
+        <div style="margin: 10px 0px 10px">
+          <h3>{{ test_assign.test.subject.name }}</h3>
+          <h3>{{ test_assign.test.name }}</h3>
+        </div>
+        <h4>Дата написания: {% if test_assign.writing_date %}test_assign.writing_date{% else %}-{% endif %}</h4>
+      </div>
+    </a>
+  {% empty %}
+    Записей нет. Чтобы выставить оценки за тест, убедитесь что этот тест назначен желаемому классу
+  {% endfor %}
+</div>
+{% endblock %}

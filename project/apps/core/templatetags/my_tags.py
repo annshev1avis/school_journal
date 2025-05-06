@@ -1,6 +1,4 @@
 from django import template
-from django.urls import reverse
-from django.urls.exceptions import NoReverseMatch
 
 register = template.Library()
 

@@ -1,11 +1,23 @@
 from django import forms
 
+import apps.tests_app.models as models
+
 
 class TaskSolutionForm(forms.ModelForm):
-    fields = ["student", "task", "result"]
-    widgets = {
-        "student": forms.HiddenInput,
-        "task": forms.HiddenInput,
-    }
+    class Meta:
+        model = models.TaskSolution
+        fields = ["student", "task", "result"]
+        widgets = {
+            "student": forms.HiddenInput,
+            "task": forms.HiddenInput,
+        }
+    
 
-TaskSolutionFormSet = forms.formset_factory(TaskSolutionForm)
+"""
+Используется для выставления ответов одного студента на один тест
+"""
+StudentTestSolutionFormSet = forms.modelformset_factory(
+    models.TaskSolution,
+    TaskSolutionForm,
+    extra=0,
+)
