@@ -18,23 +18,33 @@ class TestAssignListView(generic.ListView):
     context_object_name = "test_assigns"
 
 
-class ResultsMatrix:
-    def __init__(self, students, tasks, test_max_points):
+class StudentTestResults:
+    """
+    Представляет результаты выполнения теста для группы студентов.
+    Вычисляет итоговые показатели:
+    - сумма баллов по каждому студенту
+    - процент выполнения теста
+    - статистику по решению каждого задания
+    """
+    def __init__(self, students, tasks):
         self.students = students
         self.tasks = tasks
-        self.test_max_points = test_max_points
+        self.max_test_score = (
+            self.tasks.aggregate(
+                total_max_points=Sum("max_points")
+            )["total_max_points"]
+        )
         
-        self.points = self.get_points()
-        self.result_in_points = self.get_result_in_points()
-        self.result_in_percents = self.get_result_in_percents()
-        self.task_solved_amount = self.get_task_solved_amount()
-        self.task_unsolved_amount = self.get_task_unsolved_amount()
+        self.student_task_scores = self._get_student_task_scores()
+        self.student_total_scores = self._get_student_total_scores()
+        self.student_percentage_scores = self._get_student_percentage_scores()
+        self.task_success_counts = self._get_task_success_counts()
+        self.task_failure_counts = self._get_task_failure_counts()
 
-    def get_points(self):
+    def _get_student_task_scores(self):
         """
-        возвращает словарь, который хранит
-        для каждого ученика словарь с полученными 
-        за каждое задание баллами (баллы в виде int)
+        Возвращает словарь с баллами каждого студента по всем заданиям
+        {student: {task: score}}
         """
         return {
             student: {
@@ -45,49 +55,65 @@ class ResultsMatrix:
             for student in self.students
         }
 
-    def get_result_in_points(self):
+    def _get_student_total_scores(self):
         """
-        сумма баллов для каждого ученика
-        """
-        return {
-            student: sum(points.values())
-            for student, points in self.points.items()
-        }
-
-    def get_result_in_percents(self):
-        """
-        процент выполнения теста для каждого ученика
+        Возвращает суммарные баллы каждого студента по всем заданиям
+        {student: total_score}
         """
         return {
-            student: total_points / self.test_max_points * 100
-            for student, total_points in self.result_in_points.items()
+            student: sum(scores.values())
+            for student, scores in self.student_task_scores.items()
         }
 
-    def get_task_solved_amount(self):
+    def _get_student_percentage_scores(self):
         """
-        количество учеников, решивших задание для каждого задания
+        Возвращает процент выполнения теста для каждого студента
+        {student: percentage_score}
+        """
+        return {
+            student: total_score / self.max_test_score * 100
+            for student, total_score in self.student_total_scores.items()
+        }
+
+    def _get_task_success_counts(self):
+        """
+        Возвращает количество студентов, успешно решивших задание
+        {task: success_count}
         """
         return {
             task: sum(
-                [int(self.points[student][task] > 0) for student in self.students]
+                score > 0 for score in [
+                    self.student_task_scores[student][task] 
+                    for student in self.students
+                ]
             )
             for task in self.tasks
         }
         
-    def get_task_unsolved_amount(self):
+    def _get_task_failure_counts(self):
         """
-        количество учеников, не решивших задание для каждого задания
+        Возвращает количество студентов, не решивших задание
+        {task: failure_count}
         """
         return {
             task: sum(
-                [int(self.points[student][task] == 0) for student in self.students]
+                score == 0 for score in [
+                    self.student_task_scores[student][task] 
+                    for student in self.students
+                ]
             )
             for task in self.tasks
         }
-        
+
 
 class MarksView(generic.View):
-    def divide_students(self, students, tasks):
+    """
+    Выводит таблицу с учениками и выставленными баллами за задания в тесте.
+    Учеников, которые не писали тест, выводит отдельным списком.
+    Для удобного расчета итоговых столбцов данные загружаются в 
+    экземпляр ResultsDicts
+    """
+    def divide_students(self):
         """
         Во избежание ошибок отображения результатов в общей таблице
         разделяет учеников, у которых выставлены все баллы и
@@ -96,10 +122,10 @@ class MarksView(generic.View):
         with_results = []
         without_results = []
         
-        for student in students:
+        for student in self.students:
             task_solutions = (
                 tests_app_models.TaskSolution
-                .objects.filter(student=student, task__in=tasks)
+                .objects.filter(student=student, task__in=self.tasks)
             )
             if all(task.result is not None for task in task_solutions):
                 with_results.append(student)
@@ -109,25 +135,22 @@ class MarksView(generic.View):
         return (with_results, without_results)
     
     def get(self, request, test_id, group_id):
-        students = (
+        self.students = (
             core_models.Student.objects.filter(group_id=group_id)
             .order_by("surname", "name")
         )
-        tasks = (
+        self.tasks = (
             test_management_models.Task.objects
             .filter(test_id=test_id)
             .order_by("num", "sub_num")
         )
         
         students_with_result, students_without_results = (
-            self.divide_students(students, tasks)
+            self.divide_students()
         )
-        test_max_points = tasks.aggregate(total_max_points=Sum("max_points"))["total_max_points"]
-        
-        results_matrix = ResultsMatrix(
+        results = StudentTestResults(
             students_with_result,
-            tasks,
-            test_max_points,
+            self.tasks,
         )
         
         return render(
@@ -136,89 +159,98 @@ class MarksView(generic.View):
             {
                 "test": test_management_models.Test.objects.get(pk=test_id),
                 "group": core_models.Group.objects.get(pk=group_id),
-                "tasks": tasks,
-                "results_matrix": results_matrix,
+                "tasks": self.tasks,
+                "results": results,
                 "students_without_results": students_without_results
             }
         )
 
 
 class SetMarksView(generic.View):
+    """
+    View с таблицей для выставления оценок за 
+    определенную проверочную определенному классу
+    """
     template_name = "tests_app/set_marks.html"
     
+    def get_task_solutions(self, student):
+        """
+        Возвращает TaskSolutions ученика student,
+        связанные с этим тестом
+        """
+        return(
+            tests_app_models.TaskSolution.objects
+            .filter(
+                student=student,
+                task__in=self.tasks,
+            )
+            .order_by("task__num", "task__sub_num")
+        )
+    
+    def get_student_solutions_formsets(self):
+        """
+        Возвращает словарь вида ученик: 
+        формсет для выставления TaskSolution связанных с этим тестом.
+        Обновляет данными из request.POST, если они есть
+        """
+        return {
+            student: forms.StudentTestSolutionFormSet(
+                self.request.POST if self.request.POST else None,
+                queryset=self.get_task_solutions(student),
+                prefix=f"student-id-{student.id}"
+            )
+            for student in self.students
+        }
+    
     def get(self, request, test_id, group_id):
-        test = test_management_models.Test.objects.get(pk=test_id)
-        group = core_models.Group.objects.get(pk=group_id)
-        students = (
+        self.students = (
             core_models.Student.objects.filter(group_id=group_id)
             .order_by("surname", "name")
         )
-        tasks = (
+        self.tasks = (
             test_management_models.Task.objects
             .filter(test_id=test_id)
             .order_by("num", "sub_num")
         )
-    
-        student_solutions_formsets = {}
-        for student in students:
-            student_solutions_formsets[student] = forms.StudentTestSolutionFormSet(
-                queryset=(
-                    tests_app_models.TaskSolution.objects
-                    .filter(
-                        student=student,
-                        task__in=tasks,
-                    )
-                    .order_by("task__num", "task__sub_num")
-                ),
-                prefix=f"student-id-{student.id}"
-            )
         
         return render(
             request,
             self.template_name,
             {
-                "test": test,
-                "group": group,
-                "tasks": tasks,
-                "students": students,
+                "test": test_management_models.Test.objects.get(pk=test_id),
+                "group": core_models.Group.objects.get(pk=group_id),
+                "tasks": self.tasks,
+                "students": self.students,
                 "student_solutions_formsets":
-                    student_solutions_formsets,
+                    self.get_student_solutions_formsets(),
             },
         )
         
+    def send_formset_errors_message(self, formset):
+        student = formset[0].instance.student
+        error_messages_str = (
+            ''.join(error.message for error in formset.non_form_errors().data)
+        )
+        messages.error(
+            self.request,
+            f"Ошибка при заполнении '{student.surname} {student.name}': "
+            f"{error_messages_str}"
+        )
+        
     def post(self, request, test_id, group_id):
-        students = core_models.Student.objects.filter(group_id=group_id)
-        tasks = (
+        self.students = core_models.Student.objects.filter(group_id=group_id)
+        self.tasks = (
             test_management_models.Task.objects
             .filter(test_id=test_id)
             .order_by("num", "sub_num")
         )
-        student_formsets = [
-            forms.StudentTestSolutionFormSet(
-                request.POST,
-                queryset=(
-                    tests_app_models.TaskSolution.objects
-                    .filter(
-                        student=student,
-                        task__in=tasks,
-                    )
-                ),
-                prefix=f"student-id-{student.id}"
-            ) for student in students
-        ]
         
-        for formset in student_formsets:
+        student_formsets = self.get_student_solutions_formsets()
+        for student, formset in student_formsets.items():
             if not formset.is_valid():
-                student = formset[0].instance.student
-                error_messages_str = (
-                    ''.join(error.message for error in formset.non_form_errors().data)
-                )
-                messages.error(
-                    request,
-                    f"Ошибка при заполнении '{student.surname} {student.name}': "
-                    f"{error_messages_str}"
-                )
+                self.send_formset_errors_message(formset)
                 return self.get(request, test_id, group_id)
+            
             formset.save()                
                 
         return redirect(

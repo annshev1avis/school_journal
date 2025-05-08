@@ -21,14 +21,14 @@
     </tr>
   </thead>
   <tbody>
-    {% for student, points in results_matrix.points.items %}
+    {% for student, scores in results.student_task_scores.items %}
       <tr>
         <td>{{ student.surname }} {{ student.name }}</td>
-        {% for point, int_result in points.items %}
+        {% for point, int_result in scores.items %}
           <td>{{ int_result }}</td>
         {% endfor %}
-        <td>{{ results_matrix.result_in_points|get:student }}</td>
-        <td>{{ results_matrix.result_in_percents|get:student }} %</td>
+        <td>{{ results.student_total_scores|get:student }}</td>
+        <td>{{ results.student_percentage_scores|get:student }} %</td>
       </tr>
     {% endfor %}
   </tbody>
@@ -36,13 +36,13 @@
     <tr>
       <td>С заданием справились</td>
       {% for task in tasks %}
-        <td>{{ results_matrix.task_solved_amount|get:task }}</td>
+        <td>{{ results.task_success_counts|get:task }}</td>
       {% endfor %}
     </tr>
     <tr>
       <td>С заданием не справились</td>
       {% for task in tasks %}
-        <td>{{ results_matrix.task_unsolved_amount|get:task }}</td>
+        <td>{{ results.task_failure_counts|get:task }}</td>
       {% endfor %}
     </tr>
   </tfoot>
@@ -52,7 +52,9 @@
   <caption>Ученики, которые не выполняли работу</caption>
   <tbody>
     {% for student in students_without_results %}
-      <td>{{ student.surname }} {{ student.name }}</td>
+      <tr>
+        <td>{{ student.surname }} {{ student.name }}</td>
+      </tr>
     {% endfor %}
   </tbody>
 </table>

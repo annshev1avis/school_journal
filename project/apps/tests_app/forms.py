@@ -11,6 +11,7 @@ class TaskSolutionForm(forms.ModelForm):
         widgets = {
             "student": forms.HiddenInput,
             "task": forms.HiddenInput,
+            "result": forms.NumberInput(attrs={"style": "width:100%"})
         }
         
     def __init__(self, *args, **kwargs):
