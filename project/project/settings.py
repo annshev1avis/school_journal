@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "debug_toolbar",
     # созданные
     "apps.core.apps.CoreConfig",
+    "apps.personal_cards.apps.PersonalCardsConfig",
     "apps.tests_app.apps.TestsAppConfig",
     "apps.tests_management.apps.TestsManagementConfig",
     "apps.users.apps.UsersConfig",

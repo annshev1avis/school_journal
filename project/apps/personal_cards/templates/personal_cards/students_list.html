@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="list">
+  {% for student in students %}
+    <a href="{% url 'personal_cards:student_card' student.id %}">
+      <div class="card">
+        <h3>{{ student.surname }} {{ student.name }}</h3>
+        <h3>{{ student.group }}</h3>
+      </div>
+    </a>
+  {% empty %}
+    Записей нет
+  {% endfor %}
+</div>
+{% endblock %}
