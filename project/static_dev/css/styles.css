@@ -123,11 +123,13 @@ body {
 
 form {
     margin: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 /* Поле формы */
 .form-field {
-    margin-bottom: 1.5rem;
     position: relative;
 }
 
@@ -151,12 +153,19 @@ form {
 .form-field input[type="number"],
 .form-field textarea,
 .form-field select {
-    width: 100%;
     padding: 0.75rem;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 1rem;
     transition: border-color 0.3s;
+}
+
+.form-field input[type="text"],
+.form-field input[type="email"],
+.form-field input[type="password"],
+.form-field input[type="number"],
+.form-field textarea {
+    width: 100%;
 }
 
 .form-field input:focus,
@@ -219,4 +228,10 @@ th, td {
 
 .max-points-col{
     width: 10%;
+}
+
+.filters-form{
+    display: flex;
+    flex-direction: row;
+    margin: 0px 0px 20px;
 }

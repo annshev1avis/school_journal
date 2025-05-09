@@ -16,6 +16,10 @@ class TestAssignListView(generic.ListView):
     model = test_management_models.TestAssign
     template_name = "tests_app/test_assigns_list.html"
     context_object_name = "test_assigns"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context
 
 
 class StudentTestResults:

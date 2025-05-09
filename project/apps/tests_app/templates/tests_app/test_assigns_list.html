@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block title %}Выставление оценок{% endblock %}
 {% block content %}
+<form method="get" class="filters-form">
+  {% include "includes/form_fields.html" with form=filters_form %}
+  <button type="submit" class="button">Применить</button>
+</form>
 <div class="list">
   {% for test_assign in test_assigns %}
     <a href="{% url 'tests_app:view_marks' test_assign.test.id test_assign.group.id %}">
