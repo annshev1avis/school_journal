@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Выставление оценок{% endblock %}
 {% block content %}
+{% include "includes/filters_form.html" %}
 <div class="list">
   {% for test_assign in test_assigns %}
     <a href="{% url 'tests_app:view_marks' test_assign.test.id test_assign.group.id %}">

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
+{% include "includes/filters_form.html" %}
 <div class="list">
   {% for student in students %}
     <a href="{% url 'personal_cards:student_card' student.id %}">
