@@ -1,19 +1,23 @@
 import random
 
+import django.forms
 from django.contrib import messages
 from django.views import generic
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 
+import apps.core.models as core_models
+from apps.core.views import ListFiltersMixin
 from apps.tests_management import forms
 from apps.tests_management import models
 
 
 # список тестов
-class TestListView(generic.ListView):
+class TestListView(ListFiltersMixin, generic.ListView):
     model = models.Test
     template_name = "tests_management/tests_list.html"
     context_object_name = "tests"
+    filter_fields = ["studing_year", "subject"]
 
 
 # операции с отдельным тестом

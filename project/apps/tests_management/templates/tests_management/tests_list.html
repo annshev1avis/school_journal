@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Управление проверочными{% endblock %}
 {% block content %}
+  {% include "includes/filters_form.html" %}
   <div class="list">
   {% for test in tests %}
     <a href="{% url 'tests_management:update_test' test.pk %}">

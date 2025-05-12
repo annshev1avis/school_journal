@@ -1,25 +1,24 @@
 import datetime
 
 from django.contrib import messages
+import django.forms
 from django.views import generic
 from django.shortcuts import render, redirect
 from django.db.models import Sum
 from django.urls import reverse_lazy
 
+from apps.core.views import ListFiltersMixin
 import apps.core.models as core_models
 import apps.tests_app.forms as forms
 import apps.tests_app.models as tests_app_models
 import apps.tests_management.models as test_management_models
 
 
-class TestAssignListView(generic.ListView):
+class TestAssignListView(ListFiltersMixin, generic.ListView):
     model = test_management_models.TestAssign
     template_name = "tests_app/test_assigns_list.html"
     context_object_name = "test_assigns"
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context
+    filter_fields = ["group"]
 
 
 class StudentTestResults:
