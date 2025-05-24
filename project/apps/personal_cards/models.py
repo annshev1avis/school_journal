@@ -27,6 +27,13 @@ class PersonalMonthCard(models.Model):
     class Meta:
         verbose_name = "Личная карточка"
         verbose_name_plural = "Личные карточки"
+        
+    def __str__(self):
+        return (
+            f"Карточка {self.student.surname} "
+            f"{self.student.name} "
+            f"за {self.start_date}-{self.end_date}"
+        )
     
 
 class PersonalRecommendations(models.Model):
@@ -91,13 +98,16 @@ class SoftSkill(models.Model):
     """
     name = models.CharField(
         "название",
-        max_length=50,
+        max_length=150,
     )
     
     class Meta:
         verbose_name = "Межпредметный навык"
         verbose_name_plural = "Межпредметные навыки"
     
+    def __str__(self):
+        return self.name
+
 
 class SoftSkillMark(models.Model):
     """

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="list">
+  {% for card in cards %}
+    <a href="{% url 'personal_cards:card' card.id %}">
+      <div class="card">
+        <h3>{{ card.student.surname }} {{ card.student.name }}</h3>
+        <h3>{{ card.student.group }}</h3>
+        <h3>Период: {{ card.start_date|date:"d.m" }}-{{ card.end_date|date:"d.m" }}</h3>
+      </div>
+    </a>
+  {% empty %}
+    Записей нет
+  {% endfor %}
+</div>
+{% endblock %}
