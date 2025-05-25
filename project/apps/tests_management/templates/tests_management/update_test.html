@@ -28,19 +28,19 @@
         {% for form in tasks_formset %}
         <tr>
           {{ form.id }}
-          <td class="form-field">
+          <td>
             {{ form.num.errors }}
             {{ form.num }}
           </td>
-          <td class="form-field">
-            {{ form.sub_num.errors }}
-            {{ form.sub_num }}
+          <td>
+            {{ form.level.errors }}
+            {{ form.level }}
           </td>
-          <td class="form-field">
+          <td>
             {{ form.checked_skill.errors }}
             {{ form.checked_skill }}
           </td>
-          <td class="form-field">
+          <td>
             {{ form.max_points.errors }}
             {{ form.max_points }}
           </td>
@@ -54,7 +54,7 @@
       </tbody>
     </table>
     <a class="button" href="{% url 'tests_management:create_task' test_pk %}">Добавить задание</a>
-    <input type="submit" class="button" value="Сохранить">
+    <button type="submit" class="button">Сохранить</button>
     <a class="button" href="{% url 'tests_management:delete_test' test_pk %}">Удалить тест</a>
   </form>
 {% endblock %}

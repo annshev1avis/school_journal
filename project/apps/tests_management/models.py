@@ -23,6 +23,9 @@ class Test(models.Model):
             (4, 4),
         },
     )
+    with_reflexive_level = models.BooleanField(
+        "есть ли рефлексивный уровень",
+    )
     last_update_date = models.DateTimeField(
         "время последнего редактирования",
         auto_now=True,
@@ -46,6 +49,17 @@ class Test(models.Model):
 
     def __str__(self):
         return f"{self.name} {self.studing_year} класс"
+    
+    def save(self, *args, **kwargs):
+        self.with_reflexive_level = False
+        for task in self.tasks.all():
+            print(task.checked_skill, task.level)
+            if task.level == Task.REFLEXIVE:
+                self.with_reflexive_level = True
+                break
+        
+        print(self.with_reflexive_level)
+        super().save(*args, **kwargs)
 
 
 class TestAssign(models.Model):
@@ -74,6 +88,13 @@ class TestAssign(models.Model):
 
 
 class Task(models.Model):
+    BASIC = "Баз"
+    REFLEXIVE = "Реф"
+    TASK_LEVELS = {
+        (BASIC, "Базовый"),
+        (REFLEXIVE, "Рефлексивный")
+    }
+    
     test = models.ForeignKey(
         Test,
         on_delete=models.CASCADE,
@@ -83,10 +104,11 @@ class Task(models.Model):
     num = models.IntegerField(
         "номер задания в проверочной",
     )
-    sub_num = models.IntegerField(
-        "подномер задания в проверочной",
-        null=True,
-        blank=True,
+    level = models.CharField(
+        "уровень",
+        max_length=3,
+        choices=TASK_LEVELS,
+        default=BASIC,
     )
     checked_skill = models.CharField(
         "проверяемый навык",

@@ -40,7 +40,10 @@ class TestWithTasksUpdateView(generic.View):
         test = get_object_or_404(models.Test, pk=pk)
         
         test_form = forms.TestForm(instance=test)
-        tasks_formset = forms.TaskFormSet(instance=test, queryset=test.tasks)
+        tasks_formset = forms.TaskFormSet(
+            instance=test,
+            queryset=test.tasks.order_by("num", "level")
+        )
     
         return render(
             request,
@@ -88,7 +91,7 @@ class TestDeleteView(generic.DeleteView):
 # операции с отдельным заданием
 class TaskCreateView(generic.CreateView):
     model = models.Task
-    fields = ["num", "sub_num", "checked_skill", "max_points"]
+    fields = ["num", "level", "checked_skill", "max_points"]
     template_name = "tests_management/task_form.html"
     
     def setup(self, request, *args, **kwargs):

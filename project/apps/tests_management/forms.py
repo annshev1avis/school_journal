@@ -17,9 +17,9 @@ class TestForm(forms.ModelForm):
 class TaskForm(forms.ModelForm):
     class Meta:
         model = models.Task
-        fields = ['id', 'num', 'sub_num', 'checked_skill', 'max_points']
+        fields = ["id", "num", "level", "checked_skill", "max_points"]
         widgets = {
-            'id': forms.HiddenInput,
+            "id": forms.HiddenInput,
         }
 
 

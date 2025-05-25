@@ -7,7 +7,6 @@
     <meta charset="utf-8" />
     <title>{% block title %}Электронный журнал{% endblock %}</title>
     <link href="{% static "css/styles.css" %}?v={{ uniq_stamp }}" rel="stylesheet" type="text/css"/>
-    {% block script %}{% endblock %}
   </head>
   <body>
     {% include "includes/header.html" %}
@@ -20,4 +19,5 @@
       </div>
     </main>
   </body>
+  {% block script %}{% endblock %}
 </html>

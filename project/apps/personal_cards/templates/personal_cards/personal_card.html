@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block content %}
   <div class="card-info">
     <h1 class="primary">
@@ -26,7 +27,7 @@
         {{ recommendations_formset.errors }}
       </div>
     {% endif %}
-    <table>
+    <table class="table-with-textareas">
       <caption>Индивидуальные рекомендации</caption>
       {{ recommendations_formset.management_form }}
       {% for form in recommendations_formset %}
@@ -44,7 +45,7 @@
         {{ strengths_formset.errors }}
       </div>
     {%endif %}
-    <table>
+    <table class="table-with-textareas">
       <caption>Сильные стороны</caption>
       {{ strengths_formset.management_form }}
       {% for form in strengths_formset %}
@@ -57,4 +58,20 @@
     </table>
     <button type="submit" class="button">Сохранить</button>
   </forms>
+{% endblock %}
+
+{% block script %}
+  <script>
+    document.querySelectorAll('.table-with-textareas textarea').forEach(textarea => {
+        console.log("textarea!");
+        // Устанавливаем высоту по содержимому
+        textarea.style.height = textarea.scrollHeight + 'px';
+        
+        // Для динамического изменения при вводе
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+  </script>
 {% endblock %}
