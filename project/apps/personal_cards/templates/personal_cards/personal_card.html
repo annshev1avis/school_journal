@@ -21,6 +21,12 @@
     </table>
     <table>
       <caption>Темы для повторения</caption>
+      {% for subject, topics in repeat_topics.items %}
+        <tr>
+          <td>{{ subject }}</td>
+          <td>{{ topics|join:", " }}</td>
+        </tr>
+      {% endfor %}
     </table>
     {% if recommendations_formset.errors %}
       <div class="errors">

@@ -90,7 +90,7 @@ class TestSolutions:
             self.get_student_reflexive_total_score(student) 
             / self.test.total_reflexive_points * 100
         )
-    
+
 
 class TasksStatistics:
     """
