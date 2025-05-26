@@ -13,7 +13,7 @@ urlpatterns = [
         name="view_marks",
     ),
     path(
-        "<int:test_id>/groups/<int:group_id>/set_marks",
+        "<int:test_id>/groups/<int:group_id>/set_marks/",
         views.SetMarksView.as_view(),
         name="set_marks",
     ),

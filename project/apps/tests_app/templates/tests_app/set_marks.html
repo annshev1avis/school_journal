@@ -11,8 +11,8 @@
         <th rowspan="2">Ученики</th>
         {% for task in tasks %}
           <th>
-            {{ task.num }}{% if task.sub_num %}.{{ task.sub_num }}{% endif %} 
-            (макс: {{ task.max_points }})
+            <h4>{{ task.num }}. {{ task.level }}</h4>
+            <h4>(макс: {{ task.max_points }})</h4>
           </th>
         {% endfor %}
       </tr>

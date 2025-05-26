@@ -1,18 +1,26 @@
 {% extends "base.html" %}
-{% load my_filters %}
 
 {% block title %}{% endblock %}
 {% block content %}
 <table>
-  <caption>{{ test.name }}. {{ group }}</caption>
+  <caption>{{ test.subject.name }}. {{ test.name }}. {{ group }}</caption>
   <thead>
     <tr>
       <th rowspan="2">Ученики</th>
       {% for task in tasks %}
-        <th>{{ task.num }}{% if task.sub_num %}.{{ task.sub_num }}{% endif %}</th>
+        <th>
+          <div>
+            {{ task.num }}.
+            {{ task.level }}
+          </div>
+        </th>
       {% endfor %}
-      <th rowspan="2">Итого в баллах</th>
-      <th rowspan="2">Итого в процентах</th>
+      <th rowspan="2">Итог в баллах (базовый)</th>
+      <th rowspan="2">Итог в процентах (базовый)</th>
+      {% if test.with_reflexive_level %}
+        <th rowspan="2">Итог в баллах (рефлексивный)</th>
+        <th rowspan="2">Итог в процентах (рефлексивный)</th>
+      {% endif %}
     </tr>
     <tr>
       {% for task in tasks %}
@@ -21,28 +29,33 @@
     </tr>
   </thead>
   <tbody>
-    {% for student, scores in results.student_task_scores.items %}
+    {% for student in students_table_part %}
       <tr>
-        <td>{{ student.surname }} {{ student.name }}</td>
-        {% for point, int_result in scores.items %}
-          <td>{{ int_result }}</td>
+        <td>{{ student.name }}</td>
+        {% for solution in student.points %}
+          <td>{{ solution.result }}</td>
         {% endfor %}
-        <td>{{ results.student_total_scores|get:student }}</td>
-        <td>{{ results.student_percentage_scores|get:student }} %</td>
+        <td>{{ student.basic_points }}</td>
+        <td>{{ student.basic_percent }} %</td>
+
+        {% if test.with_reflexive_level %}
+          <td>{{ student.reflexive_points }}</td>
+          <td>{{ student.reflexive_percent }} %</td>
+        {% endif %}
       </tr>
     {% endfor %}
   </tbody>
   <tfoot>
     <tr>
       <td>С заданием справились</td>
-      {% for task in tasks %}
-        <td>{{ results.task_success_counts|get:task }}</td>
+      {% for task_success_count in statistic_table_part.success %}
+        <td>{{ task_success_count }}</td>
       {% endfor %}
     </tr>
     <tr>
       <td>С заданием не справились</td>
-      {% for task in tasks %}
-        <td>{{ results.task_failure_counts|get:task }}</td>
+      {% for task_fail_count in statistic_table_part.fail %}
+        <td>{{ task_fail_count }}</td>
       {% endfor %}
     </tr>
   </tfoot>

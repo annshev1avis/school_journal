@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 import apps.tests_app.models as models
+from apps.tests_management.models import Task
 
 
 class TaskSolutionForm(forms.ModelForm):
@@ -45,22 +46,68 @@ class BaseStudentTestSolutionFormset(forms.BaseModelFormSet):
         """
         if any(self.errors):
             return
+        if not len(self.forms) > 0:
+            return
         
-        solutions = [
-            form.cleaned_data["result"]
-            for form in self.forms
-        ]
+        self.test = self.get_test()
+        new_results = self.get_new_results()
         
-        if not(
-            all(solution is None for solution in solutions) or
-            all(solution is not None for solution in solutions)
+        self.check_filled_in_full(new_results)
+        if self.is_filled and self.test.with_reflexive_level:
+            self.check_levels_are_consistent(new_results)
+    
+    def get_test(self):
+        return self.forms[0].instance.task.test
+            
+    def get_new_results(self):
+        return {
+            form.instance.task: form.cleaned_data["result"] for form in self.forms
+        }
+    
+    def check_filled_in_full(self, new_results):
+        """
+        Проверяет, что результаты теста не были заполнены частично
+        """
+        if not (
+            all(res is None for res in new_results.values()) or
+            all(res is not None for res in new_results.values())
         ):
             raise ValidationError(
                 "Если вы начали заполнять результаты ученика, "
                 "надо заполнить поля для ВСЕХ заданий"
             )
             
+        self.is_filled = all(res is not None for res in new_results.values())
 
+    def check_levels_are_consistent(self, new_results):
+        """
+        Проверяет, что баллы за задания базового и рефлексивного уровней
+        находятся в согласованном состоянии. (Согласно системе оценивания,
+        если ученик решил рефлексивное задание, соответствующее задание
+        базового уровня защитывается на максимальный балл автоматически)
+        """
+        nums = self.queryset.values_list("task__num", flat=True).distinct()
+        
+        for num in nums:
+            basic_task = Task.objects.get(
+                test=self.test, num=num, level=Task.BASIC
+            )
+            reflexive_task = Task.objects.get(
+                test=self.test, num=num, level=Task.REFLEXIVE
+            )
+            
+            basic_task_has_max_points = (
+                new_results[basic_task] == basic_task.max_points
+            )
+            reflexive_task_has_points = new_results[reflexive_task] > 0
+            
+            if reflexive_task_has_points and (not basic_task_has_max_points):
+                raise ValidationError(
+                    f"""В задании #{num} базовый уровень должен
+                    быть оценен на максимум, так как
+                    решён рефлексивный"""
+                )
+            
         
 """
 Используется для выставления ответов одного студента на один тест

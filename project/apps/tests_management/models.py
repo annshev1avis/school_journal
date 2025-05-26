@@ -25,6 +25,7 @@ class Test(models.Model):
     )
     with_reflexive_level = models.BooleanField(
         "есть ли рефлексивный уровень",
+        default=False,
     )
     last_update_date = models.DateTimeField(
         "время последнего редактирования",
@@ -51,15 +52,26 @@ class Test(models.Model):
         return f"{self.name} {self.studing_year} класс"
     
     def save(self, *args, **kwargs):
-        self.with_reflexive_level = False
-        for task in self.tasks.all():
-            print(task.checked_skill, task.level)
-            if task.level == Task.REFLEXIVE:
-                self.with_reflexive_level = True
-                break
+        if self.id:
+            self.with_reflexive_level = False
+            for task in self.tasks.all():
+                if task.level == Task.REFLEXIVE:
+                    self.with_reflexive_level = True
+                    break
         
-        print(self.with_reflexive_level)
         super().save(*args, **kwargs)
+        
+    def get_total_points(self, level):
+        tasks = self.tasks.filter(level=level)
+        return tasks.aggregate(sum_max_points=models.Sum("max_points"))["sum_max_points"]
+    
+    @property
+    def total_basic_points(self):
+        return self.get_total_points(Task.BASIC)
+        
+    @property
+    def total_reflexive_points(self):
+        return self.get_total_points(Task.REFLEXIVE)
 
 
 class TestAssign(models.Model):
@@ -87,7 +99,20 @@ class TestAssign(models.Model):
         return f"{self.group} - {self.test}"
 
 
+class OrderedTasksManager(models.Manager):
+    """
+    Использование класса в качестве основного менеджера Task
+    гарантирует сортировку по номеру (и уровню) заданий.
+    Необходимо, чтобы во всех формах и таблицах-формах
+    подписи соответствовали полям
+    """
+    def get_queryset(self):
+        return super().get_queryset().order_by("num", "level")
+    
+
 class Task(models.Model):
+    objects = OrderedTasksManager()
+    
     BASIC = "Баз"
     REFLEXIVE = "Реф"
     TASK_LEVELS = {

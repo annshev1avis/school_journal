@@ -21,114 +21,25 @@ class TestAssignListView(ListFiltersMixin, generic.ListView):
     filter_fields = ["group"]
 
 
-class StudentTestResults:
-    """
-    Представляет результаты выполнения теста для группы студентов.
-    Вычисляет итоговые показатели:
-    - сумма баллов по каждому студенту
-    - процент выполнения теста
-    - статистику по решению каждого задания
-    """
-    def __init__(self, students, tasks):
-        self.students = students
-        self.tasks = tasks
-        self.max_test_score = (
-            self.tasks.aggregate(
-                total_max_points=Sum("max_points")
-            )["total_max_points"]
-        )
-        
-        self.student_task_scores = self._get_student_task_scores()
-        self.student_total_scores = self._get_student_total_scores()
-        self.student_percentage_scores = self._get_student_percentage_scores()
-        self.task_success_counts = self._get_task_success_counts()
-        self.task_failure_counts = self._get_task_failure_counts()
-
-    def _get_student_task_scores(self):
-        """
-        Возвращает словарь с баллами каждого студента по всем заданиям
-        {student: {task: score}}
-        """
-        return {
-            student: {
-                task: tests_app_models.TaskSolution
-                .objects.get(student=student, task=task).result
-                for task in self.tasks
-            }
-            for student in self.students
-        }
-
-    def _get_student_total_scores(self):
-        """
-        Возвращает суммарные баллы каждого студента по всем заданиям
-        {student: total_score}
-        """
-        return {
-            student: sum(scores.values())
-            for student, scores in self.student_task_scores.items()
-        }
-
-    def _get_student_percentage_scores(self):
-        """
-        Возвращает процент выполнения теста для каждого студента
-        {student: percentage_score}
-        """
-        return {
-            student: total_score / self.max_test_score * 100
-            for student, total_score in self.student_total_scores.items()
-        }
-
-    def _get_task_success_counts(self):
-        """
-        Возвращает количество студентов, успешно решивших задание
-        {task: success_count}
-        """
-        return {
-            task: sum(
-                score > 0 for score in [
-                    self.student_task_scores[student][task] 
-                    for student in self.students
-                ]
-            )
-            for task in self.tasks
-        }
-        
-    def _get_task_failure_counts(self):
-        """
-        Возвращает количество студентов, не решивших задание
-        {task: failure_count}
-        """
-        return {
-            task: sum(
-                score == 0 for score in [
-                    self.student_task_scores[student][task] 
-                    for student in self.students
-                ]
-            )
-            for task in self.tasks
-        }
-
-
 class MarksView(generic.View):
     """
     Выводит таблицу с учениками и выставленными баллами за задания в тесте.
     Учеников, которые не писали тест, выводит отдельным списком.
-    Для удобного расчета итоговых столбцов данные загружаются в 
-    экземпляр ResultsDicts
+    Для удобного расчета итоговых столбцов 
     """
-    def divide_students(self):
+    def divide_students(self, students):
         """
-        Во избежание ошибок отображения результатов в общей таблице
+        Во избежание ошибок отображения результатов в общей таблице,
         разделяет учеников, у которых выставлены все баллы и
         у которых есть None в результатах теста.
         """
         with_results = []
         without_results = []
         
-        for student in self.students:
+        for student in students:
             task_solutions = (
                 tests_app_models.TaskSolution
-                .objects.filter(student=student, task__in=self.tasks)
+                .objects.filter(student=student, task__test=self.test)
             )
             if all(task.result is not None for task in task_solutions):
                 with_results.append(student)
@@ -137,34 +48,62 @@ class MarksView(generic.View):
         
         return (with_results, without_results)
     
+    def get_students_table_part(self, students):
+        test_solutions = tests_app_models.TestSolutions(self.test)
+        
+        rows = []
+        for student in students:
+            row = {
+                "name": f"{student.surname} {student.name}",
+                "points": test_solutions.get_student_solutions(student),
+                "basic_points": 
+                    test_solutions.get_student_basic_total_score(student),
+                "basic_percent": 
+                    round(test_solutions.get_student_basic_percent(student)),
+            }
+            if self.test.with_reflexive_level:
+                row.update({
+                    "reflexive_points": 
+                        test_solutions.get_student_reflexive_total_score(student),
+                    "reflexive_percent": 
+                        round(test_solutions.get_student_reflexive_percent(student)),
+                })
+            
+            rows.append(row)
+        
+        return rows
+    
+    def get_statistics_table_part(self):
+        tasks_statistics = tests_app_models.TasksStatistics(self.test)
+        
+        return {
+            "success": [tasks_statistics.get_count(task, success=True) for task in self.tasks],
+            "fail": [tasks_statistics.get_count(task, success=False) for task in self.tasks],
+        }   
+    
     def get(self, request, test_id, group_id):
-        self.students = (
+        self.test = test_management_models.Test.objects.get(pk=test_id)
+        self.tasks = test_management_models.Task.objects.filter(test_id=test_id)
+        
+        if len(self.tasks) == 0:
+            return render(request, "tests_app/no_results.html", {})
+        
+        students_with_result, students_without_results = self.divide_students(
             core_models.Student.objects.filter(group_id=group_id)
             .order_by("surname", "name")
-        )
-        self.tasks = (
-            test_management_models.Task.objects
-            .filter(test_id=test_id)
-            .order_by("num", "sub_num")
-        )
-        
-        students_with_result, students_without_results = (
-            self.divide_students()
-        )
-        results = StudentTestResults(
-            students_with_result,
-            self.tasks,
         )
         
         return render(
             request,
             "tests_app/view_marks.html",
             {
-                "test": test_management_models.Test.objects.get(pk=test_id),
+                "test": self.test,
                 "group": core_models.Group.objects.get(pk=group_id),
                 "tasks": self.tasks,
-                "results": results,
-                "students_without_results": students_without_results
+                "students_with_result": students_with_result,
+                "students_without_results": students_without_results,
+                "students_table_part": self.get_students_table_part(students_with_result),
+                "statistic_table_part": self.get_statistics_table_part()
             }
         )
 
@@ -187,7 +126,6 @@ class SetMarksView(generic.View):
                 student=student,
                 task__in=self.tasks,
             )
-            .order_by("task__num", "task__sub_num")
         )
     
     def get_student_solutions_formsets(self):
@@ -213,7 +151,6 @@ class SetMarksView(generic.View):
         self.tasks = (
             test_management_models.Task.objects
             .filter(test_id=test_id)
-            .order_by("num", "sub_num")
         )
         
         return render(
@@ -245,7 +182,6 @@ class SetMarksView(generic.View):
         self.tasks = (
             test_management_models.Task.objects
             .filter(test_id=test_id)
-            .order_by("num", "sub_num")
         )
         
         student_formsets = self.get_student_solutions_formsets()
@@ -262,4 +198,3 @@ class SetMarksView(generic.View):
                 kwargs={"test_id": test_id, "group_id": group_id},
             )
         )
-        
