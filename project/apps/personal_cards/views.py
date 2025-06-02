@@ -5,26 +5,55 @@ from django.views import generic
 from django.urls import reverse_lazy
 from django.db.models import F
 
-from apps.core.models import Subject
+from apps.core.models import Subject, Group
 from apps.tests_app.models import TaskSolution, ResultsCalculator
 from apps.tests_management.models import TestAssign, Task, Test
 import apps.personal_cards.forms as forms
-import apps.personal_cards.models as models
+from apps.personal_cards.models import PersonalMonthCard
 from apps.core.views import ListFiltersMixin
 
 
-class CardsListView(ListFiltersMixin, generic.ListView):
-    model = models.PersonalMonthCard
-    template_name = "personal_cards/cards_list.html"
+class GroupsListView(ListFiltersMixin, generic.ListView):
+    model = Group
+    template_name = "personal_cards/groups_list.html"
+    context_object_name = "groups"
+    filter_fields = ["campus"]
+    
+
+class GroupView(generic.ListView):
+    model = PersonalMonthCard
+    template_name = "personal_cards/group.html"
     context_object_name = "cards"
-    # filter_fields = ["group"]
+
+    def get_queryset(self):
+        group_id = self.kwargs["group_id"]
+        return super().get_queryset().filter(student__group_id=group_id)
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["group"] = Group.objects.get(id=self.kwargs["group_id"])
+        return context
+
+
+class GroupActiveCardsView(GroupView):
+    template_name = "personal_cards/group_active_cards.html"
+    
+    def get_queryset(self):
+        return super().get_queryset().filter(is_archived=False)
+    
+
+class GroupArchivedCardsView(GroupView):
+    template_name = "personal_cards/group_archived_cards.html"
+    
+    def get_queryset(self):
+        return super().get_queryset().filter(is_archived=True)
 
 
 class CardView(generic.View):
     template_name = "personal_card.html"
     
     def dispatch(self, request, *args, **kwargs):
-        self.card = models.PersonalMonthCard.objects.get(
+        self.card = PersonalMonthCard.objects.get(
             id=kwargs["card_id"]
         )
         return super().dispatch(request, *args, **kwargs)
@@ -41,7 +70,6 @@ class CardView(generic.View):
             card_year if card_month in (9, 10, 11, 12) else card_year - 1,
             9, 1,
         )
-        print(studing_year_started)
         return Test.objects.filter(
             testassign__writing_date__gte=studing_year_started,
             testassign__writing_date__lte=self.card.end_date,

@@ -5,9 +5,14 @@ import apps.personal_cards.views as views
 
 app_name = "personal_cards"
 urlpatterns = [
-    path("", views.CardsListView.as_view(), name="cards_list"),
+    path("", views.GroupsListView.as_view(), name="groups_list"),
+    path("groups/<int:group_id>/", views.GroupActiveCardsView.as_view(), name="group"),
     path(
-        "<int:card_id>/", views.CardView.as_view(),
+        "<int:group_id>/archived/", views.GroupArchivedCardsView.as_view(),
+        name="group_archived"
+    ),
+    path(
+        "cards/<int:card_id>/", views.CardView.as_view(),
         name="card",
     ),
 ]

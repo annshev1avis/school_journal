@@ -1,0 +1,10 @@
+{% extends "personal_cards/group.html" %}
+{% block buttons %}
+<div style="display: flex; flex-direction:column; gap: 10px; margin-bottom: 30px;">
+  <h1>
+    Личные отчёты класса 
+    {{ group.studing_year}}-{{ group.letter }} {{group.campus }}
+  </h1>
+  <a href="{% url "personal_cards:group" group.id %}" class="button">Назад</a>
+</div>
+{% endblock %}

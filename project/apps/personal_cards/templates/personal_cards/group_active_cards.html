@@ -1,0 +1,19 @@
+{% extends "personal_cards/group.html" %}
+{% block buttons %}
+<div style="display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 10px"
+>
+  <h1>
+    Личные отчёты класса 
+    {{ group.studing_year}}-{{ group.letter }} {{group.campus }}
+  </h1>
+  <button class="button">Создать отчёты</button>
+</div>
+<div style="padding-bottom: 30px;">
+  <button class="button grey">Переместить всё архив</button>
+  <a href="{% url "personal_cards:group_archived" group.id %}" class="button">Перейти в архив</a>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+{% include "includes/filters_form.html" %}
+<div class="list">
+  {% for group in groups %}
+    <a href="{% url 'personal_cards:group' group.id %}">
+      <div class="card">
+        <h3>{{ group.campus }} {{ group.studing_year }}-{{ group.letter }}</h3>
+      </div>
+    </a>
+  {% empty %}
+    Нет учебных классов, их может добавить админ
+  {% endfor %}
+</div>
+{% endblock %}
