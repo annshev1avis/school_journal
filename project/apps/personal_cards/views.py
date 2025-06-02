@@ -1,10 +1,12 @@
+import datetime
+
 from django.shortcuts import render, redirect
 from django.views import generic
 from django.urls import reverse_lazy
 from django.db.models import F
 
 from apps.core.models import Subject
-from apps.tests_app.models import TaskSolution
+from apps.tests_app.models import TaskSolution, ResultsCalculator
 from apps.tests_management.models import TestAssign, Task, Test
 import apps.personal_cards.forms as forms
 import apps.personal_cards.models as models
@@ -29,13 +31,22 @@ class CardView(generic.View):
     
     def get_written_tests(self):
         """
-        Возвращает тесты, написанные в отчетный период
+        Возвращает тесты, написанные от 1 сентября текущего года
+        до конца отчетного периода отчёта
         """
+        
+        card_month = self.card.start_date.month
+        card_year = self.card.start_date.year
+        studing_year_started = datetime.date(
+            card_year if card_month in (9, 10, 11, 12) else card_year - 1,
+            9, 1,
+        )
+        print(studing_year_started)
         return Test.objects.filter(
-            testassign__writing_date__gte=self.card.start_date,
+            testassign__writing_date__gte=studing_year_started,
             testassign__writing_date__lte=self.card.end_date,
             testassign__group=self.card.student.group
-        )
+        ).order_by("testassign__writing_date")
     
     def get_repeat_topics(self):
         """
@@ -60,12 +71,30 @@ class CardView(generic.View):
             
         return topics        
     
+    def get_tests_by_subjects(self):
+        tests_by_subjects = {subject: [] for subject in Subject.objects.all()}
+
+        for test in self.get_written_tests():
+            calculator = ResultsCalculator(test, self.card.student)
+            
+            result = {"test": test, "basic_percent": "-", "reflexive_percent": "-"}
+            
+            if not calculator.empty_result:
+                result["basic_percent"] = calculator.get_total_percent(Task.BASIC)
+                if test.with_reflexive_level:
+                    result["reflexive_percent"] = calculator.get_total_percent(Task.REFLEXIVE)
+
+            tests_by_subjects[test.subject].append(result)
+
+        return tests_by_subjects
+    
     def get(self, request, card_id):
         return render(
             request,
             "personal_cards/personal_card.html",
             {
                 "card": self.card,
+                "tests_by_subject": self.get_tests_by_subjects(),
                 "repeat_topics": self.get_repeat_topics(),
                 "recommendations_formset": self.get_recommendations_formset(),
                 "strengths_formset": self.get_strengths_formset(), 

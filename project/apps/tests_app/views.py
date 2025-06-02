@@ -10,12 +10,12 @@ from django.urls import reverse_lazy
 from apps.core.views import ListFiltersMixin
 import apps.core.models as core_models
 import apps.tests_app.forms as forms
-import apps.tests_app.models as tests_app_models
-import apps.tests_management.models as test_management_models
+from apps.tests_app.models import ResultsCalculator, TaskSolution, TasksStatistics
+from apps.tests_management.models import TestAssign, Task, Test
 
 
 class TestAssignListView(ListFiltersMixin, generic.ListView):
-    model = test_management_models.TestAssign
+    model = TestAssign
     template_name = "tests_app/test_assigns_list.html"
     context_object_name = "test_assigns"
     filter_fields = ["group"]
@@ -38,7 +38,7 @@ class MarksView(generic.View):
         
         for student in students:
             task_solutions = (
-                tests_app_models.TaskSolution
+                TaskSolution
                 .objects.filter(student=student, task__test=self.test)
             )
             if all(task.result is not None for task in task_solutions):
@@ -48,25 +48,23 @@ class MarksView(generic.View):
         
         return (with_results, without_results)
     
-    def get_students_table_part(self, students):
-        test_solutions = tests_app_models.TestSolutions(self.test)
-        
+    def get_students_table_part(self, students):  
         rows = []
         for student in students:
+            calculator = ResultsCalculator(self.test, student)
             row = {
                 "name": f"{student.surname} {student.name}",
-                "points": test_solutions.get_student_solutions(student),
-                "basic_points": 
-                    test_solutions.get_student_basic_total_score(student),
+                "points": calculator.get_solutions(),
+                "basic_points": calculator.get_total_points(Task.BASIC),
                 "basic_percent": 
-                    round(test_solutions.get_student_basic_percent(student)),
+                    round(calculator.get_total_percent(Task.BASIC)),
             }
             if self.test.with_reflexive_level:
                 row.update({
                     "reflexive_points": 
-                        test_solutions.get_student_reflexive_total_score(student),
+                        calculator.get_total_points(Task.REFLEXIVE),
                     "reflexive_percent": 
-                        round(test_solutions.get_student_reflexive_percent(student)),
+                        round(calculator.get_total_percent(Task.REFLEXIVE)),
                 })
             
             rows.append(row)
@@ -74,7 +72,7 @@ class MarksView(generic.View):
         return rows
     
     def get_statistics_table_part(self):
-        tasks_statistics = tests_app_models.TasksStatistics(self.test)
+        tasks_statistics = TasksStatistics(self.test)
         
         return {
             "success": [tasks_statistics.get_count(task, success=True) for task in self.tasks],
@@ -82,8 +80,8 @@ class MarksView(generic.View):
         }   
     
     def get(self, request, test_id, group_id):
-        self.test = test_management_models.Test.objects.get(pk=test_id)
-        self.tasks = test_management_models.Task.objects.filter(test_id=test_id)
+        self.test = Test.objects.get(pk=test_id)
+        self.tasks = Task.objects.filter(test_id=test_id)
         
         if len(self.tasks) == 0:
             return render(request, "tests_app/no_results.html", {})
@@ -121,7 +119,7 @@ class SetMarksView(generic.View):
         связанные с этим тестом
         """
         return(
-            tests_app_models.TaskSolution.objects
+            TaskSolution.objects
             .filter(
                 student=student,
                 task__in=self.tasks,
@@ -143,24 +141,33 @@ class SetMarksView(generic.View):
             for student in self.students
         }
     
-    def get(self, request, test_id, group_id):
+    def dispatch(self, request, *args, **kwargs):
+        self.test_assign = TestAssign.objects.get(
+            test_id=kwargs["test_id"],
+            group_id=kwargs["group_id"]
+        )
         self.students = (
-            core_models.Student.objects.filter(group_id=group_id)
+            core_models.Student.objects
+            .filter(group=self.test_assign.group)
             .order_by("surname", "name")
         )
         self.tasks = (
-            test_management_models.Task.objects
-            .filter(test_id=test_id)
+            Task.objects
+            .filter(test=self.test_assign.test)
         )
         
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get(self, request, test_id, group_id):
         return render(
             request,
             self.template_name,
             {
-                "test": test_management_models.Test.objects.get(pk=test_id),
-                "group": core_models.Group.objects.get(pk=group_id),
+                "test": self.test_assign.test,
+                "group": self.test_assign.group,
                 "tasks": self.tasks,
                 "students": self.students,
+                "test_assign_form": forms.TestAssignForm(instance=self.test_assign),
                 "student_solutions_formsets":
                     self.get_student_solutions_formsets(),
             },
@@ -178,13 +185,14 @@ class SetMarksView(generic.View):
         )
         
     def post(self, request, test_id, group_id):
-        self.students = core_models.Student.objects.filter(group_id=group_id)
-        self.tasks = (
-            test_management_models.Task.objects
-            .filter(test_id=test_id)
-        )
-        
+        test_assign_form = forms.TestAssignForm(instance=self.test_assign, data=request.POST)
         student_formsets = self.get_student_solutions_formsets()
+        
+        
+        if not test_assign_form.is_valid():
+            return self.get(request, test_id, group_id)
+        test_assign_form.save()
+        
         for student, formset in student_formsets.items():
             if not formset.is_valid():
                 self.send_formset_errors_message(formset)

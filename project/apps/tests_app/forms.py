@@ -2,7 +2,16 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 import apps.tests_app.models as models
-from apps.tests_management.models import Task
+from apps.tests_management.models import Task, TestAssign
+
+
+class TestAssignForm(forms.ModelForm):
+    class Meta:
+        model = TestAssign
+        fields = ["writing_date"]
+        widgets = {
+            "writing_date": forms.DateInput(attrs={'type': 'date'}, format="%Y-%m-%d"),
+        }
 
 
 class TaskSolutionForm(forms.ModelForm):
@@ -12,7 +21,7 @@ class TaskSolutionForm(forms.ModelForm):
         widgets = {
             "student": forms.HiddenInput,
             "task": forms.HiddenInput,
-            "result": forms.NumberInput(attrs={"style": "width:100%"})
+            "result": forms.NumberInput
         }
         
     def __init__(self, *args, **kwargs):
@@ -107,7 +116,7 @@ class BaseStudentTestSolutionFormset(forms.BaseModelFormSet):
                     быть оценен на максимум, так как
                     решён рефлексивный"""
                 )
-            
+  
         
 """
 Используется для выставления ответов одного студента на один тест

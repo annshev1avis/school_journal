@@ -42,53 +42,36 @@ class TaskSolution(models.Model):
         verbose_name_plural = "решения"
 
 
-class TestSolutions:
+class ResultsCalculator:
     """
-    Предоставляет удобный интерфейс для доступа к данным
-    о результатах учеников по переданному тесту
+    Предоставляет набор методов для расчета результатов теста
     """
-    def __init__(self, test):
+    def __init__(self, test, student):
         self.test = test
-        self.solutions_queryset = (
-            TaskSolution.objects
-            .filter(task__test=self.test)
+        self.student = student
+    
+    def get_solutions(self):
+        return TaskSolution.objects.filter(
+            task__test=self.test,
+            student=self.student,
+            result__isnull=False
         )
         
-    def get_student_solutions(self, student):
-        return self.solutions_queryset.filter(student=student)
+    @property
+    def empty_result(self):
+        return len(self.get_solutions()) == 0
         
-    def student_has_taken(self, student):
-        for task in self.get_student_solutions(student):
-            if task.result is None:
-                return False
-        return True
-    
-    def get_student_basic_total_score(self, student):
+    def get_total_points(self, level):
         return (
-            self.get_student_solutions(student)
-            .filter(task__level=Task.BASIC)
-            .aggregate(total_score=models.Sum("result"))
-            ["total_score"]
+            self.get_solutions()
+            .filter(task__level=level)
+            .aggregate(models.Sum("result"))["result__sum"]
         )
-    
-    def get_student_reflexive_total_score(self, student):
+
+    def get_total_percent(self, level):
         return (
-            self.get_student_solutions(student)
-            .filter(task__level=Task.REFLEXIVE)
-            .aggregate(total_score=models.Sum("result"))
-            ["total_score"]
-        )
-    
-    def get_student_basic_percent(self, student):
-        return (
-            (self.get_student_basic_total_score(student) 
-            / self.test.total_basic_points) * 100
-        )
-    
-    def get_student_reflexive_percent(self, student):
-        return (
-            self.get_student_reflexive_total_score(student) 
-            / self.test.total_reflexive_points * 100
+            (self.get_total_points(level) /
+            self.test.get_total_points(level)) * 100
         )
 
 

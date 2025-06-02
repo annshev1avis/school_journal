@@ -4,8 +4,9 @@
 {% block content %}
 <form method="POST">
   {% csrf_token %}
+  {% include "includes/form_fields.html" with form=test_assign_form %}
   <table>
-    <caption>{{ test.name }}. {{ group }}</caption>
+    <caption>{{ test.subject.name }}. {{ test.name }}. {{ group }}</caption>
     <thead>
       <tr>
         <th rowspan="2">Ученики</th>
@@ -15,6 +16,11 @@
             <h4>(макс: {{ task.max_points }})</h4>
           </th>
         {% endfor %}
+      </tr>
+      <tr>
+      {% for task in tasks %}
+        <th>{{ task.checked_skill }}</th>
+      {% endfor %}
       </tr>
     </thead>
     <tbody>

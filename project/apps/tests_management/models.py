@@ -88,7 +88,6 @@ class TestAssign(models.Model):
     writing_date = models.DateField(
         "дата написания",
         null=True,
-        blank=True,
     )
 
     class Meta:

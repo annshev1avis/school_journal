@@ -11,7 +11,13 @@
           <h3>{{ test_assign.test.subject.name }}</h3>
           <h3>{{ test_assign.test.name }}</h3>
         </div>
-        <h4>Дата написания: {% if test_assign.writing_date %}test_assign.writing_date{% else %}-{% endif %}</h4>
+        <h4>Дата написания: 
+          {% if test_assign.writing_date %}
+            {{ test_assign.writing_date }}
+          {% else %}
+            -
+          {% endif %}
+        </h4>
       </div>
     </a>
   {% empty %}
