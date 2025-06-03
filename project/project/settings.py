@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     # third party
     "debug_toolbar",
     # созданные
+    "apps.analytics.apps.AnalyticsConfig",
     "apps.core.apps.CoreConfig",
     "apps.personal_cards.apps.PersonalCardsConfig",
     "apps.tests_app.apps.TestsAppConfig",

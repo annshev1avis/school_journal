@@ -17,7 +17,8 @@
             href="{% url "personal_cards:groups_list" %}">Личные отчёты</a>
           </li>
           <li>
-            <a class="nav_link" href="">Аналитика</a>
+            <a class="nav_link {% link_is_active '/analytics/' request %}"
+            href="{% url "analytics:choose_section" %}">Аналитика</a>
           </li>
         </ul>
       </nav>

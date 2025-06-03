@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="list">
+    <a class="button" href="{% url "analytics:tests_list" %}">
+      Анализировать результаты проверочных
+    </a>
+    <a class="button" href="{% url "analytics:groups_list" %}">
+      Анализировать успехи учеников
+    </a>
+  </div>
+{% endblock %}

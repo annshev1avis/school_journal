@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+  {% include "includes/filters_form.html" %}
+  <div class="list">
+    {% for group in groups %}
+      <a href="{% url "analytics:group" group.id %}">
+        <div class="card">
+          <h3 class="primary">{{ group.studing_year }}-{{ group.letter }}</h3>
+          <h3 class="secondary">{{ group.campus }}</h3>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% endblock %}
