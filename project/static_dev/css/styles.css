@@ -78,15 +78,21 @@ body {
     text-decoration: underline;
 }
 
+/* всплывающие сообщения */
 .messages_container{
     margin: 10px 0px 10px;
 }
 
-.message{
+.message {
     border: 2px solid rgb(0, 197, 49);
     border-radius: 5px;
     background-color: rgb(119, 212, 142);
     padding: 10px;
+}
+
+.page-title {
+    font-size: 16pt;
+    font-weight: 700;
 }
 
 .list {
@@ -97,6 +103,7 @@ body {
     margin-bottom: 30px;
 }
 
+/* карточка и надписи на ней*/
 .card {
     background-color: white;
     display: flex;
@@ -245,4 +252,20 @@ th, td {
     padding: 5px;
     resize: none;
     overflow-y: hidden;
+}
+
+.margin-top{
+    margin-top: 10px;
+}
+
+.little-margin-bottom{
+    margin-bottom: 10px;
+}
+
+.medium-margin-bottom{
+    margin-bottom: 25px;
+}
+
+.big-margin-bottom{
+    margin-bottom: 35px;
 }
