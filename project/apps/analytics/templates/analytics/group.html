@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+  <form method="get" class="filters-form">
+    {% include "includes/form_fields.html" with form=period_form %}
+    <button type="submit" class="button">Применить</button>
+  </form>
+  <h1 class="page-title">
+    Прогресс учеников {{ group.studing_year }}-{{ group.letter }} класса
+  </h1>
+  {% for plot in students_plots %}
+    {{ plot|safe }}
+  {% endfor %}
+  {{ students_plot|safe }}
+{% endblock %}

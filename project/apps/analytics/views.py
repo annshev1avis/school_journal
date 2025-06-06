@@ -1,10 +1,14 @@
 from django.views import generic
 import pandas as pd
+import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 from plotly.offline import plot
 
+import apps.analytics.forms as forms
+from apps.core.constants import STUDING_MONTHES_DICT
 from apps.core.views import ListFiltersMixin
-from apps.core.models import Group
+from apps.core.models import Group, Student
 from apps.tests_management.models import Test, Task
 from apps.tests_app.models import TaskSolution
 
@@ -157,3 +161,84 @@ class GroupDetailView(generic.DetailView):
     template_name = "analytics/group.html"
     model = Group
     context_object_name = "group"
+
+    def get_period_monthes(self, period_form):
+        start_month = 1
+        end_month = 10
+        
+        if period_form.is_valid():
+            if period_form.cleaned_data["start_month"]:
+                start_month = int(period_form.cleaned_data["start_month"])
+            if period_form.cleaned_data["end_month"]:
+                end_month = int(period_form.cleaned_data["end_month"])
+        
+        monthes_nums = list(STUDING_MONTHES_DICT.keys())
+        return monthes_nums[start_month:end_month+1]
+
+    @staticmethod
+    def average_solution_percent(group):
+        return group["result"].sum() / group["task__max_points"].sum() * 100
+
+    @staticmethod
+    def get_month_name(df_row):
+        return STUDING_MONTHES_DICT[df_row["task__test__month"]]
+
+    def get_students_plot(self):
+        students = Student.objects.filter(group=self.object)
+        
+        plots = []
+        for student in students:
+            task_solutions = (
+                TaskSolution.objects
+                .filter(student=student, task__test__month__in=self.period_monthes)
+                .values(
+                    "task__test__subject__name", "task__test__month", 
+                    "result", "task__max_points",  
+                )
+            )
+            df = (
+                pd.DataFrame.from_records(task_solutions)
+                .dropna()
+                .assign(month_name=lambda x: x.apply(
+                    self.get_month_name, axis=1
+                ))
+                .sort_values("task__test__month")
+            )
+            grouped = df.groupby(["task__test__subject__name", "month_name"])
+            
+            aggregated = grouped.apply(self.average_solution_percent)
+            aggregated = aggregated.reset_index()
+            aggregated.columns = ["subject", "month", "performance_percent"]
+    
+            fig = px.line(
+                aggregated,
+                x="month",
+                y="performance_percent",
+                color="subject"
+            )
+            
+            fig.update_layout(
+                yaxis={
+                    "range": [0, 100],
+                }
+            )
+            
+            plots.append(plot(fig, output_type="div"))
+            
+        return plots
+
+    def get_subjects_plot(self):
+        return
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        period_form = forms.PeriodForm(
+            data=self.request.GET if self.request.GET else None
+        )
+        self.period_monthes = self.get_period_monthes(period_form)
+    
+        context["period_form"] = period_form
+        context["students_plots"] = self.get_students_plot()
+        context["subjects_plot"] = self.get_subjects_plot()
+        return context
