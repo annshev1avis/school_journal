@@ -16,6 +16,7 @@ from apps.tests_management.models import TestAssign, Task, Test
 
 class TestAssignListView(ListFiltersMixin, generic.ListView):
     model = TestAssign
+    queryset = TestAssign.objects.filter(test__is_published=True)
     template_name = "tests_app/test_assigns_list.html"
     context_object_name = "test_assigns"
     filter_fields = ["group"]
@@ -83,6 +84,9 @@ class MarksView(generic.View):
         self.test = Test.objects.get(pk=test_id)
         self.tasks = Task.objects.filter(test_id=test_id)
         
+        if not self.test.is_published:
+            return render(request, "tests_management/test_is_not_published.html", {})
+        
         if len(self.tasks) == 0:
             return render(request, "tests_app/no_results.html", {})
         
@@ -146,6 +150,10 @@ class SetMarksView(generic.View):
             test_id=kwargs["test_id"],
             group_id=kwargs["group_id"]
         )
+        
+        if not self.test_assign.test.is_published:
+            return redirect(reverse_lazy("tests_management:test_is_not_published"))
+        
         self.students = (
             core_models.Student.objects
             .filter(group=self.test_assign.group)

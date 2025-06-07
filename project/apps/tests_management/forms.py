@@ -7,11 +7,8 @@ class TestForm(forms.ModelForm):
     class Meta:
         model = models.Test
         fields = [
-            "name", "subject", "studing_year", "groups"
+            "name", "subject", "studing_year",
         ]
-        widgets = {
-            "groups": forms.CheckboxSelectMultiple
-        }
 
 
 class TaskForm(forms.ModelForm):

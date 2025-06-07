@@ -44,15 +44,16 @@ class TestWithTasksUpdateView(generic.View):
             instance=test,
             queryset=test.tasks.order_by("num", "level")
         )
+        test_assigns = models.TestAssign.objects.filter(test=test)
     
         return render(
             request,
             self.template_name,
             {
-                "test_pk": test.pk,
-                "form": test_form,
+                "test": test,
+                "test_form": test_form,
                 "tasks_formset": tasks_formset,
-                "uniq_stamp": random.random()
+                "test_assigns": test_assigns,
             }
         )
 
@@ -105,3 +106,15 @@ class TaskCreateView(generic.CreateView):
     
     def get_success_url(self):
         return reverse_lazy("tests_management:update_test", kwargs={"pk": self.object.test.pk})
+
+
+class PublishTestView(generic.DetailView):
+    model = models.Test
+    
+    def post(self, request, *args, **kwargs):
+        test = self.get_object()
+        test.is_published = True
+        test.save()
+        
+        messages.success(request, 'Тест успешно опубликован!')
+        return redirect(reverse_lazy("tests_management:update_test", args=[test.pk]))
