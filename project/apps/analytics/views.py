@@ -172,63 +172,81 @@ class GroupDetailView(generic.DetailView):
             if period_form.cleaned_data["end_month"]:
                 end_month = int(period_form.cleaned_data["end_month"])
         
-        monthes_nums = list(STUDING_MONTHES_DICT.keys())
-        return monthes_nums[start_month:end_month+1]
+        return range(start_month, end_month + 1)
 
     @staticmethod
     def average_solution_percent(group):
-        return group["result"].sum() / group["task__max_points"].sum() * 100
+        return group["result"].sum() / group["max_result"].sum() * 100
 
     @staticmethod
     def get_month_name(df_row):
-        return STUDING_MONTHES_DICT[df_row["task__test__month"]]
-
-    def get_students_plot(self):
-        students = Student.objects.filter(group=self.object)
-        
-        plots = []
-        for student in students:
-            task_solutions = (
-                TaskSolution.objects
-                .filter(student=student, task__test__month__in=self.period_monthes)
-                .values(
-                    "task__test__subject__name", "task__test__month", 
-                    "result", "task__max_points",  
-                )
-            )
-            df = (
-                pd.DataFrame.from_records(task_solutions)
-                .dropna()
-                .assign(month_name=lambda x: x.apply(
-                    self.get_month_name, axis=1
-                ))
-                .sort_values("task__test__month")
-            )
-            grouped = df.groupby(["task__test__subject__name", "month_name"])
-            
-            aggregated = grouped.apply(self.average_solution_percent)
-            aggregated = aggregated.reset_index()
-            aggregated.columns = ["subject", "month", "performance_percent"]
-    
-            fig = px.line(
-                aggregated,
-                x="month",
-                y="performance_percent",
-                color="subject"
-            )
-            
-            fig.update_layout(
-                yaxis={
-                    "range": [0, 100],
-                }
-            )
-            
-            plots.append(plot(fig, output_type="div"))
-            
-        return plots
+        return STUDING_MONTHES_DICT[df_row["month"]]
 
     def get_subjects_plot(self):
-        return
+        # Исходные данные
+        df = pd.DataFrame.from_records(
+            TaskSolution.objects.filter(
+                task__test__month__in=self.period_monthes,
+                student__group=self.object,
+            ).values(
+                "result", "task__max_points", "task__test__month",
+                "task__test__subject__name",
+            ),
+        ).dropna()
+        
+        df = df.rename(columns={
+            "result": "result",
+            "task__max_points": "max_result",
+            "task__test__subject__name": "subject",
+            "task__test__month": "month",
+        })
+        
+        # Сортировка по числовому месяцу
+        df = df.sort_values(by="month")
+        df["month_name"] = df.apply(self.get_month_name, axis=1)
+
+        # Группировка и агрегация
+        grouped = df.groupby(["subject", "month_name"])
+        aggregated = (
+            grouped.apply(self.average_solution_percent)
+            .reset_index()
+        )
+        aggregated.columns = ['subject', "month_name", 'average_percent']
+
+        # --- Исправление порядка месяцев ---
+        MONTH_ORDER = [
+            "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
+            "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+            "Июль", "Август", 
+        ]
+        
+        aggregated["month_name"] = pd.Categorical(
+            aggregated["month_name"],
+            categories=MONTH_ORDER,
+            ordered=True
+        )
+        aggregated = aggregated.sort_values("month_name")
+        # ---
+
+        # Построение графика
+        fig = px.line(
+            aggregated,
+            x="month_name",
+            y="average_percent",
+            color="subject",
+            title="Средний процент выполнения тестов",
+            markers=True,
+            labels={
+                "month_name": "Месяц",
+                "average_percent": "Средний процент, %",
+                "subject": "Предмет"
+            }
+        )
+        
+        fig.update_layout(yaxis_range=[0, 100])
+        fig.update_traces(marker=dict(size=12))
+        
+        return plot(fig, output_type="div")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -239,6 +257,5 @@ class GroupDetailView(generic.DetailView):
         self.period_monthes = self.get_period_monthes(period_form)
     
         context["period_form"] = period_form
-        context["students_plots"] = self.get_students_plot()
         context["subjects_plot"] = self.get_subjects_plot()
         return context
