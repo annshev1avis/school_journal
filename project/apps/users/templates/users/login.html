@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
   <h1 class="page-title">Вход в систему</h1>
-  <h3>(Если у вас нет аккаунта, обратитесь к администратору для его создания)</h3>
+  <h3>(Если у вас нет аккаунта или вы забыли пароль, обратитесь к администратору)</h3>
 
   {% if next %}
     {% if user.is_authenticated %}
@@ -18,5 +18,4 @@
     <button type="submit" class="button">Войти</button>
     <input type="hidden" name="next" value="{{ next }}">
   </form>
-  <p><a href="{% url 'users:password_reset' %}">Забыли пароль?</a></p>
 {% endblock %}
