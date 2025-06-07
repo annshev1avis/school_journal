@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from django.urls import reverse_lazy
 from django.forms.renderers import DjangoTemplates
 import dotenv
 
@@ -97,6 +98,9 @@ AUTH_PASSWORD_VALIDATORS = [
         "NumericPasswordValidator",
     },
 ]
+
+LOGIN_REDIRECT_URL = reverse_lazy("tests_management:tests_list")
+LOGOUT_REDIRECT_URL = reverse_lazy("users:login")
 
 LANGUAGE_CODE = "ru"
 

@@ -55,6 +55,12 @@ body {
     width: 90%;
 }
 
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .nav_list {
     display: flex;
     flex-direction: row;
@@ -83,6 +89,12 @@ body {
     border-radius: 5px;
     background-color: rgb(119, 212, 142);
     padding: 10px;
+}
+
+.page-title{
+    font-size: 16pt;
+    font-weight: 700;
+    margin: 5px 0px 10px;
 }
 
 .list {
@@ -138,6 +150,7 @@ form {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin: 15px 0px 20px;
 }
 
 .form-field {

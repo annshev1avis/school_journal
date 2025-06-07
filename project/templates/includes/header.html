@@ -1,25 +1,30 @@
 {% load my_tags %}
 <header class="header">
-    <div class="header-container">
-      <nav>
-        <ul class="nav_list">
-          <li>
-            <a class="nav_link {% link_is_active '/tests_management/' request %}" 
-            href="{% url "tests_management:tests_list" %}">
-            Управление проверочными</a>
-          </li>
-          <li>
-            <a class="nav_link {% link_is_active '/tests/' request %}"
-            href="{% url "tests_app:test_assigns_list" %}">Проверочные</a>
-          </li>
-          <li>
-            <a class="nav_link {% link_is_active '/personal_cards/' request %}"
-            href="{% url "personal_cards:groups_list" %}">Личные отчёты</a>
-          </li>
-          <li>
-            <a class="nav_link" href="">Аналитика</a>
-          </li>
-        </ul>
-      </nav>
-    </div>
-  </header>
+  <div class="header-container">
+    <nav>
+      <ul class="nav_list">
+        <li>
+          <a class="nav_link {% link_is_active '/tests_management/' request %}" 
+          href="{% url "tests_management:tests_list" %}">
+          Управление проверочными</a>
+        </li>
+        <li>
+          <a class="nav_link {% link_is_active '/tests/' request %}"
+          href="{% url "tests_app:test_assigns_list" %}">Проверочные</a>
+        </li>
+        <li>
+          <a class="nav_link {% link_is_active '/personal_cards/' request %}"
+          href="{% url "personal_cards:groups_list" %}">Личные отчёты</a>
+        </li>
+        <li>
+          <a class="nav_link" href="">Аналитика</a>
+        </li>
+      </ul>
+    </nav>
+    {% if user.is_authenticated %}
+      <a href="{% url "users:logout" %}" class="button grey">Выйти</a>
+    {% else %}
+      <a href="{% url "users:login" %}" class="button grey">Войти</a>
+    {% endif %}
+  </div>
+</header>
