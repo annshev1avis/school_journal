@@ -1,0 +1,53 @@
+<div class="test-details">
+  <div class="detail-card">
+    <span class="detail-label">Название</span>
+    <span class="detail-value">{{ test.name }}</span>
+  </div>
+
+  <div class="detail-card">
+    <span class="detail-label">Предмет</span>
+    <span class="detail-value">{{ test.subject }}</span>
+  </div>
+  
+  <div class="detail-card">
+    <span class="detail-label">Для какого класса</span>
+    <span class="detail-value">{{ test.studing_year }}</span>
+  </div>
+</div>
+
+<table>
+  <colgroup>
+    <col span="2" class="num-col"/>
+    <col class="skill-col"/>
+    <col class="max-points-col"/>
+  </colgroup>
+  <caption>Задания</caption>
+  <thead>
+    <tr>
+      <th>Номер</th>
+      <th>Уровень</th>
+      <th>Проверяемый навык</th>
+      <th>Макс. количество баллов</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for task in test.tasks.all %}
+    <tr>
+      <td>
+        {{ task.num }}
+      </td>
+      <td>
+        {{ task.level }}
+      </td>
+      <td>
+        {{ task.checked_skill }}
+      </td>
+      <td>
+        {{ task.max_points }}
+      </td>
+    </tr>
+    {% empty %}
+      <tr><td colspan="5">В тесте пока нет заданий</td></tr>
+    {% endfor %}
+  </tbody>
+</table>

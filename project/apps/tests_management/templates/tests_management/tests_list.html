@@ -13,14 +13,19 @@
           <h5 style="margin-top: 10px">{{ test.last_update_date }}</h5>
         </div>
         <div>
-          <h3>Назначен(а) классам:</h3>
-          <h3>
-            {% for group in test.groups.all %}
-              {{ group.studing_year }}{{ group.letter }}, 
-            {% empty %}
-              -
-            {% endfor %}
-          </h3>
+          {% if test.is_published %}
+            <h3>Опубликован ✅</h3>
+            <h3>Назначен(а) классам:</h3>
+            <h3>
+              {% for group in test.groups.all %}
+                {{ group.studing_year }}{{ group.letter }}, 
+              {% empty %}
+                -
+              {% endfor %}
+            </h3>
+          {% else %}
+            <h3>Не опубликован ⏳</h3>
+          {% endif %}
         </div>
       </div>
     </a>

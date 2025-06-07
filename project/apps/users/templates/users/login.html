@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">Вход в систему</h1>
+  <h3>(Если у вас нет аккаунта или вы забыли пароль, обратитесь к администратору)</h3>
+
+  {% if next %}
+    {% if user.is_authenticated %}
+    <p>У вашего аккаунта нет доступа к этой странице</p>
+    {% else %}
+    <p>Войдите в систему, чтобы посмотреть эту страницу</p>
+    {% endif %}
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+    {% include "includes/form_errors.html" %}
+    {% include "includes/form_fields.html" %}
+    <button type="submit" class="button">Войти</button>
+    <input type="hidden" name="next" value="{{ next }}">
+  </form>
+{% endblock %}

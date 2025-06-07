@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from django.urls import reverse_lazy
 from django.forms.renderers import DjangoTemplates
 import dotenv
 
@@ -49,6 +50,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # third party
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    # созданные
+    "apps.core.middleware.AuthRequiredMiddleware",
 ]
 
 ROOT_URLCONF = "project.urls"
@@ -99,6 +102,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGIN_URL = reverse_lazy("users:login")
+LOGIN_REDIRECT_URL = reverse_lazy("tests_management:tests_list")
+LOGOUT_REDIRECT_URL = reverse_lazy("users:login")
+
 LANGUAGE_CODE = "ru"
 
 TIME_ZONE = "UTC"
@@ -108,7 +115,6 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
-
 STATICFILES_DIRS = [
     BASE_DIR / "static_dev/",
 ]

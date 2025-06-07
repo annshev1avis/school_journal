@@ -9,6 +9,7 @@ urlpatterns = [
     path("personal_cards/", include("apps.personal_cards.urls")),
     path("tests/", include("apps.tests_app.urls")),
     path("tests_management/", include("apps.tests_management.urls")),
+    path("users/", include("apps.users.urls")),
 ] 
 
 if project.settings.DEBUG:

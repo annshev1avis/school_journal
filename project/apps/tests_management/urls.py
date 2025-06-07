@@ -1,3 +1,4 @@
+from django.views.generic import TemplateView
 from django.urls import path
 
 from apps.tests_management import views
@@ -22,5 +23,10 @@ urlpatterns = [
         "test/<int:test_pk>/task/create/",
         views.TaskCreateView.as_view(),
         name="create_task",
+    ),
+    path(
+        'publish_test/<int:pk>/',
+        views.PublishTestView.as_view(),
+        name='publish_test'
     ),
 ]

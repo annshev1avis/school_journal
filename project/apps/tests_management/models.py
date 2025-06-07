@@ -42,6 +42,10 @@ class Test(models.Model):
         verbose_name="составитель",
         null=True,
     )
+    is_published = models.BooleanField(
+        "опубликован ли",
+        default=False,
+    )
     groups = models.ManyToManyField(
         apps.core.models.Group,
         through="TestAssign",
