@@ -49,6 +49,8 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     # third party
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    # созданные
+    "apps.core.middleware.AuthRequiredMiddleware",
 ]
 
 ROOT_URLCONF = "project.urls"
@@ -99,6 +101,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+LOGIN_URL = reverse_lazy("users:login")
 LOGIN_REDIRECT_URL = reverse_lazy("tests_management:tests_list")
 LOGOUT_REDIRECT_URL = reverse_lazy("users:login")
 
