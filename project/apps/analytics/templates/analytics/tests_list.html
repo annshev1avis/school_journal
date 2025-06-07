@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  {% include "includes/filters_form.html" %}
+  <div class="list">
+    {% for test in tests %}
+      <a href="{% url "analytics:test" test.id %}">
+        <div class="card">
+          <div class="section">
+            <h3 class="primary">{{ test.subject }}</h3>
+            <h3 class="primary">{{ test.studing_year }} класс</h3>
+          </div>
+          <h3 class="secondary">{{ test.name }}</h3>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+{% endblock %}

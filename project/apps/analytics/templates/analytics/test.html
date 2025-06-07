@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1 class="page-title">
+    Работа "{{ test.name }}". {{ test.subject }} {{ test.studing_year }} класс
+  </h1>
+  <div class="margin-top medium_margin_buttom">
+    {{ tasks_difficulty_plot|safe }}
+  </div>
+  <div class="margin-top medium_margin_buttom">
+    {{ groups_average_percent_plot|safe }}
+  </div>
+{% endblock %}

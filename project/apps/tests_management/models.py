@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 
 import apps.core.models
+from apps.core.constants import STUDING_MONTHES_DICT
 
 
 class Test(models.Model):
@@ -22,6 +23,10 @@ class Test(models.Model):
             (3, 3),
             (4, 4),
         },
+    )
+    month = models.SmallIntegerField(
+        "месяц написания",
+        choices=list(STUDING_MONTHES_DICT.items())
     )
     with_reflexive_level = models.BooleanField(
         "есть ли рефлексивный уровень",
