@@ -31,6 +31,36 @@ class GroupsListView(ListFiltersMixin, generic.ListView):
     filter_fields = ["campus", "studing_year"]
 
 
+def style_fig(fig):
+    """Стилизация графика."""
+    fig.update_layout(
+        plot_bgcolor="white",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font={"family": "Anonymous Pro", "color": "black"},
+        margin=dict(l=20, r=20, t=40, b=20),
+        title={
+            "font": {
+                "weight": 700,
+                "size": 18
+            }
+        }
+    )
+    # Настройки осей (должны быть после update_layout)
+    fig.update_xaxes(
+        showline=True,
+        linewidth=1,
+        linecolor="lightgray",
+        gridcolor="#e0e0e0"  # Светло-серая сетка
+    )
+    
+    fig.update_yaxes(
+        showline=True,
+        linewidth=1,
+        linecolor="lightgray",
+        gridcolor="#e0e0e0"
+    )
+
+
 class TestDetailView(generic.DetailView):
     template_name = "analytics/test.html"
     model = Test
@@ -38,115 +68,133 @@ class TestDetailView(generic.DetailView):
     
     @staticmethod
     def categorize_result(df_row):
+        """Категоризация результата решения задачи."""
         if df_row["result"] == 0:
-            return "не решено"
-        
+            return "Не решено"
         if df_row["result"] == df_row["task__max_points"]:
-            return "решено полностью"
+            return "Полное решение"
         
-        return "решено частично"
-    
-    @staticmethod
-    def style_fig(fig):
-        fig.update_layout(
-            plot_bgcolor="white",
-            paper_bgcolor="rgba(0,0,0,0)",
-            font={"family": "Anonymous Pro", "color": "black"}
-        )
+        return "Частичное решение"
     
     @staticmethod
     def get_task_label(df_row):
-        return f"""{df_row["task__num"]}.{df_row["task__level"]} {df_row["task__checked_skill"]}"""
+        """Формирование читаемой метки задачи."""
+        return f"{df_row['task__num']}.{df_row['task__level']} {df_row['task__checked_skill']}"
     
     def get_tasks_difficulty_plot(self):
+        """Построение диаграммы успешности решения задач."""
         task_solutions = (
             TaskSolution.objects
             .filter(task__test=self.object)
-            .values(
-                "task", 
-                "result", 
-                "task__max_points", 
-                "task__num", 
-                "task__level", 
-                "task__checked_skill"
-            )
+            .exclude(result__isnull=True)
         )
         
-        df = (
-            pd.DataFrame.from_records(task_solutions)
-            .dropna()
-            .assign(
-                task_label=lambda x: x.apply(self.get_task_label, axis=1),
-                result_category=lambda x: x.apply(self.categorize_result, axis=1),
-                count=1
-            )
-            .sort_values(["task__num", "task__level"], ascending=[True, True])
+        if not task_solutions.exists():
+            return None
+        
+        # формируем DataFrame
+        values = [
+            "result", "task__max_points", 
+            "task__num", "task__level", "task__checked_skill"
+        ]
+        df = pd.DataFrame.from_records(task_solutions.values(*values))
+        df = df.assign(
+            task_label=lambda x: x.apply(self.get_task_label, axis=1),
+            result_category=lambda x: x.apply(self.categorize_result, axis=1)
         )
-    
+        df = df.sort_values(["task__num", "task__level"], ascending=[True, True])
+
+        
+        # группировка и аггрегация
+        result = (
+            df.groupby(['task_label', 'result_category'])
+            .size()
+            .reset_index()
+        )
+        result.columns = ["task_label", "result_category", "size"]
+        
+        # формирование графика
+        categories_order = ["Не решено", "Частичное решение", "Полное решение"]
         fig = px.bar(
-            df,
+            result,
             x="task_label",
-            y="count",
+            y="size",
             color="result_category",
             barmode="stack",
             category_orders={
-                "task_label": df["task_label"].unique()  # Сохраняем порядок сортировки
+                "task_label": df["task_label"].unique(),
+                "result_category": categories_order
+            },
+            color_discrete_map={
+                "Не решено": "#ef553b",
+                "Частичное решение": "#636efa",
+                "Полное решение": "#00cc96"
             }
         )
         
         fig.update_layout(
-            title="Успешность решения заданий",
+            title={
+                'text': "Успешность решения заданий",
+            },
             xaxis_title="Задачи",
             yaxis_title="Количество решений",
-            legend_title_text="Результат",
+            legend_title_text="",
+            hovermode="x unified"
         )
-        self.style_fig(fig)
+        
+        # Улучшаем отображение подписей
+        fig.update_xaxes(tickangle=-45)
+        fig.update_traces(hovertemplate="%{y}")
+        
+        style_fig(fig)
         
         return plot(fig, output_type="div")
     
-    @staticmethod
-    def average_solution_percent(group):
-        return group["result"].sum() / group["task__max_points"].sum() * 100
-    
     def get_groups_average_percent_plot(self):
-        task_solutions = (
-            TaskSolution.objects.filter(task__test=self.object)
-            .values(
-                "result", "task__max_points", "task__level",
-                "student__group__studing_year", "student__group__letter"
-            )
+        queryset = (
+            TaskSolution.objects
+            .filter(task__test=self.object)
+            .exclude(result__isnull=True)
         )
+        if not queryset.exists():
+            return None
         
-        df = pd.DataFrame.from_records(task_solutions)
-        df["group_name"] = (
-            df["student__group__studing_year"].astype(str) 
-            + "-" + df["student__group__letter"]
+        # создание dataframe
+        values = [
+            "result", "task__max_points", "task__level",
+            "student__group__studing_year", "student__group__letter"
+        ]
+        df = pd.DataFrame.from_records(queryset.values(*values))
+        df.columns = ["result", "max_result", "task_level", "group_year", "group_letter"]
+        df["group_name"] = df["group_year"].astype(str) + "-" + df["group_letter"]
+        
+        # группировка и аггрегация
+        grouped = df.groupby(["group_name", "task_level"]).agg(
+            total_result=("result", "sum"),
+            total_max=("max_result", "sum")
         )
-        grouped = df.groupby(["group_name", "task__level"])
-        
-        aggregated = grouped.apply(self.average_solution_percent)
-        aggregated = aggregated.reset_index()
-        aggregated.columns = ["group_name", "task__level", "average_percent"]
+        grouped["avg_percent"] = grouped["total_result"] / grouped["total_max"] * 100
+        result = grouped.reset_index()
         
         fig = px.bar(
-            aggregated,
-            x="average_percent",
+            result,
+            x="avg_percent",
             y="group_name",
-            color="task__level",
+            color="task_level",
             orientation='h',
             barmode='group',
             title="Средний процент решения задач по группам и уровням",
             labels={
-                "average_percent": "Средний процент решения (%)",
-                "student__group": "Группа студентов",
-                "task__level": "Уровень сложности"
+                "avg_percent": "Средний процент решения (%)",
+                "group_name": "Класс",
+                "task_level": "Уровень сложности"
             }
         )
         
         fig.update_layout(
             xaxis=dict(range=[0, 100]),
         )
-        self.style_fig(fig)
+        style_fig(fig)
         
         return plot(fig, output_type="div")
     
@@ -174,77 +222,61 @@ class GroupDetailView(generic.DetailView):
         
         return range(start_month, end_month + 1)
 
-    @staticmethod
-    def average_solution_percent(group):
-        return group["result"].sum() / group["max_result"].sum() * 100
-
-    @staticmethod
-    def get_month_name(df_row):
-        return STUDING_MONTHES_DICT[df_row["month"]]
-
     def get_subjects_plot(self):
-        # Исходные данные
-        df = pd.DataFrame.from_records(
-            TaskSolution.objects.filter(
-                task__test__month__in=self.period_monthes,
-                student__group=self.object,
-            ).values(
-                "result", "task__max_points", "task__test__month",
-                "task__test__subject__name",
-            ),
-        ).dropna()
-        
-        df = df.rename(columns={
-            "result": "result",
-            "task__max_points": "max_result",
-            "task__test__subject__name": "subject",
-            "task__test__month": "month",
-        })
-        
-        # Сортировка по числовому месяцу
-        df = df.sort_values(by="month")
-        df["month_name"] = df.apply(self.get_month_name, axis=1)
-
-        # Группировка и агрегация
-        grouped = df.groupby(["subject", "month_name"])
-        aggregated = (
-            grouped.apply(self.average_solution_percent)
-            .reset_index()
-        )
-        aggregated.columns = ['subject', "month_name", 'average_percent']
-
-        # --- Исправление порядка месяцев ---
-        MONTH_ORDER = [
-            "Сентябрь", "Октябрь", "Ноябрь", "Декабрь",
-            "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
-            "Июль", "Август", 
+        # извлечение данных
+        queryset = TaskSolution.objects.filter(
+            student__group=self.object,
+            task__test__month__in=self.period_monthes,
+        ).exclude(result__isnull=True)
+        if not queryset.exists():
+            return None
+    
+        # формирование dataframe
+        values = [
+            "result", "task__max_points", "task__test__month",
+            "task__test__subject__name"
         ]
+        df = pd.DataFrame.from_records(queryset.values(*values))
+        df.columns = ["result", "max_result", "month", "subject"]
+        df["month_name"] = df["month"].map(
+            lambda x: STUDING_MONTHES_DICT.get(x, "Неизвестный месяц")
+        )
         
-        aggregated["month_name"] = pd.Categorical(
-            aggregated["month_name"],
-            categories=MONTH_ORDER,
+        # группировка и агрегация
+        grouped = df.groupby(["subject", "month_name"]).agg(
+            total_result=("result", "sum"),
+            total_max=("max_result", "sum")
+        )
+        grouped["avg_percent"] = grouped["total_result"] / grouped["total_max"] * 100
+        result = grouped.reset_index()
+        
+        # исправление порядка месяцев 
+        result["month_name"] = pd.Categorical(
+            result["month_name"],
+            categories=list(STUDING_MONTHES_DICT.values()),
             ordered=True
         )
-        aggregated = aggregated.sort_values("month_name")
-        # ---
+        result = result.sort_values("month_name")
 
         # Построение графика
         fig = px.line(
-            aggregated,
+            result,
             x="month_name",
-            y="average_percent",
+            y="avg_percent",
             color="subject",
             title="Средний процент выполнения тестов",
             markers=True,
             labels={
                 "month_name": "Месяц",
-                "average_percent": "Средний процент, %",
+                "avg_percent": "Средний процент, %",
                 "subject": "Предмет"
             }
         )
         
-        fig.update_layout(yaxis_range=[0, 100])
-        fig.update_traces(marker=dict(size=12))
+        fig.update_layout(yaxis_range=[0, 100]) # подпись y-оси от 0 до 100
+        fig.update_traces(marker=dict(size=12)) # добавление точечек
+        
+        style_fig(fig)
         
         return plot(fig, output_type="div")
 

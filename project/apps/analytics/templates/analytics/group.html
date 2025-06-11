@@ -7,5 +7,9 @@
   <h1 class="page-title">
     Прогресс учеников {{ group.studing_year }}-{{ group.letter }} класса
   </h1>
-  {{ subjects_plot|safe }}
+  {% if subjects_plot %}
+    {{ subjects_plot|safe }}
+  {% else %}
+    <h2>Нет данных</h2>
+  {% endif %}
 {% endblock %}

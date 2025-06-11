@@ -3,10 +3,14 @@
   <h1 class="page-title">
     Работа "{{ test.name }}". {{ test.subject }} {{ test.studing_year }} класс
   </h1>
-  <div class="margin-top medium_margin_buttom">
-    {{ tasks_difficulty_plot|safe }}
-  </div>
-  <div class="margin-top medium_margin_buttom">
-    {{ groups_average_percent_plot|safe }}
-  </div>
+  {% if tasks_difficulty_plot and groups_average_percent_plot %}
+    <div style="margin: 20px 0px 50px;">
+      {{ tasks_difficulty_plot|safe }}
+    </div>
+    <div style="margin: 10px 0px 50px;">
+      {{ groups_average_percent_plot|safe }}
+    </div>
+  {% else %}
+    <h2>Нет данных</h2>
+  {% endif %}
 {% endblock %}
