@@ -330,6 +330,14 @@ th, td {
     max-width: 500px;
 }
 
+.modal .is-active {
+    display: block;
+}
+
+.modal-window-form {
+    margin: 0px;
+}
+
 /* форма отображения нередактируемого теста*/
 .test-details {
     display: grid;

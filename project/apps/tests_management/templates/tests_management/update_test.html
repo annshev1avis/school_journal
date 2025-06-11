@@ -3,52 +3,90 @@
 
 {% block content %}
 
-{% if test.is_published %}
-  <h1>Тест опубликован. Изменение данных уже невозможно</h1>
-  {% include "tests_management/test_info.html" %}
-{% else %}
-  <h1>Тест неопубликован</h1>
-  {% include "tests_management/test_form.html" %}
-{% endif %}
+<h1>Тест неопубликован</h1>
+
+<form method="post">
+  {% csrf_token %}
+  {% include "includes/form_errors.html" with form=test_form %}
+  {% include "includes/form_fields.html" with form=test_form %}
+
+  {{ tasks_formset.management_form }}
+  <table class="add-tasks-table">
+    <colgroup>
+      <col span="2" class="num-col"/>
+      <col class="skill-col"/>
+      <col class="max-points-col"/>
+    </colgroup>
+    <caption>Задания</caption>
+    <thead>
+      <tr>
+        <th>Номер</th>
+        <th>Уровень</th>
+        <th>Проверяемый навык</th>
+        <th>Макс. количество баллов</th>
+        <th>Удалить</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for form in tasks_formset %}
+      <tr>
+        {{ form.id }}
+        <td>
+          {{ form.num.errors }}
+          {{ form.num }}
+        </td>
+        <td>
+          {{ form.level.errors }}
+          {{ form.level }}
+        </td>
+        <td>
+          {{ form.checked_skill.errors }}
+          {{ form.checked_skill }}
+        </td>
+        <td>
+          {{ form.max_points.errors }}
+          {{ form.max_points }}
+        </td>
+        <td>
+          {{ form.DELETE }}
+        </td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="5">В тесте пока нет заданий</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="buttons-group">
+    <h4>Редактирование:</h4>
+      <div>
+        <a class="button" href="{% url 'tests_management:create_task' test.id %}">Добавить задание</a>
+        <button type="submit" class="button">Сохранить</button>
+      </div>
+  </div>
+</form>
 
 <div class="buttons-group">
   <h4>Управление:</h4>
     <div>
       {% if not test.is_published %}
-        <button class="button" onclick="showPublishModal()">Опубликовать тест</button>
+        <button class="button" data-modal-id="publishModal">Опубликовать тест</button>
       {% endif %}
       <a class="button" href="{% url 'tests_management:delete_test' test.id %}">Удалить тест</a>
     </div>
 </div>
-<div class="buttons-group" style="margin-top: 40px;">
-  <h2>Классы, которым назначен этот тест:</h2>
-  <ul>
-    {% for test_assign in test_assigns %}
-      <li>
-        {{ test_assign.group }}
-        {% if test_assign.writing_date %} - выполнили{% endif%}
-      </li>
-    {% endfor %}
-    </ul>
-  <div>
-    <button class="button grey">Добавить класс</button>
-    <button class="button grey">Удалить класс</button>
-  </div>
+
+<div class="buttons-group">
+  <h4>Назначить тест классам можно только после его публикации</h4>
 </div>
 
-<!-- Модальное окно -->
-<div id="publishModal" class="modal" style="display:none;">
+<!-- модальное окно публикации теста -->
+<div id="publishModal" class="modal">
   <div class="modal-content">
-    <p>После публикации данные теста уже нельзя будет изменить. Опубликовать?</p>
-    <form id="publishForm" method="post" action="{% url 'tests_management:publish_test' test.id %}">
+    <form id="publishForm" method="post" action="{% url 'tests_management:publish_test' test.id %}" class="modal-window-form">
       {% csrf_token %}
+      <p>После публикации данные теста уже нельзя будет изменить. Опубликовать?</p>
       <button type="submit" class="button green">Да</button>
-      <button type="button" class="button" onclick="hidePublishModal()">Назад</button>
     </form>
   </div>
 </div>
-{% endblock %}
-
-{% block script %}
-  <script src="{% static 'tests_management/js/modal.js' %}"></script>
 {% endblock %}

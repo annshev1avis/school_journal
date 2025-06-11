@@ -50,6 +50,7 @@ class Test(models.Model):
         apps.core.models.Group,
         through="TestAssign",
         verbose_name="классы, которые будут писать эту проверочную",
+        related_name="tests",
         blank=True,
     )
 

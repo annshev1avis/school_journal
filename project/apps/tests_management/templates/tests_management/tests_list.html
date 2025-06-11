@@ -4,7 +4,13 @@
   {% include "includes/filters_form.html" %}
   <div class="list">
   {% for test in tests %}
-    <a href="{% url 'tests_management:update_test' test.pk %}">
+    <a href="
+      {% if test.is_published %}
+         {% url "tests_management:test_detail" test.pk %}
+      {% else %}
+        {% url "tests_management:update_test" test.pk %}
+      {% endif %}
+    ">
       <div class="card">
         <div style="margin-bottom: 20px">
           <h3>{{ test.studing_year }} класс</h3>

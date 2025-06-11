@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Тест опубликован. Изменение данных уже невозможно</h1>
+
+<div class="test-details">
+  <div class="detail-card">
+    <span class="detail-label">Название</span>
+    <span class="detail-value">{{ test.name }}</span>
+  </div>
+
+  <div class="detail-card">
+    <span class="detail-label">Предмет</span>
+    <span class="detail-value">{{ test.subject }}</span>
+  </div>
+  
+  <div class="detail-card">
+    <span class="detail-label">Для какого класса</span>
+    <span class="detail-value">{{ test.studing_year }}</span>
+  </div>
+</div>
+
+<table>
+  <colgroup>
+    <col span="2" class="num-col"/>
+    <col class="skill-col"/>
+    <col class="max-points-col"/>
+  </colgroup>
+  <caption>Задания</caption>
+  <thead>
+    <tr>
+      <th>Номер</th>
+      <th>Уровень</th>
+      <th>Проверяемый навык</th>
+      <th>Макс. количество баллов</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for task in test.tasks.all %}
+    <tr>
+      <td>
+        {{ task.num }}
+      </td>
+      <td>
+        {{ task.level }}
+      </td>
+      <td>
+        {{ task.checked_skill }}
+      </td>
+      <td>
+        {{ task.max_points }}
+      </td>
+    </tr>
+    {% empty %}
+      <tr><td colspan="5">В тесте пока нет заданий</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+
+<div class="buttons-group">
+  <h4>Управление:</h4>
+    <div>
+      <a class="button" href="{% url 'tests_management:delete_test' test.id %}">Удалить тест</a>
+    </div>
+</div>
+
+<div class="buttons-group" style="margin-top: 40px;">
+  <h2>Классы, которым назначен этот тест:</h2>
+  <ul>
+    {% for test_assign in test.testassign_set.all %}
+      <li>
+        {{ test_assign.group }}
+        {% if test_assign.writing_date %} - выполнили {{ test_assign.writing_date }}{% endif%}
+      </li>
+    {% endfor %}
+    </ul>
+  <div>
+    <button class="button grey" data-modal-id="addGroupsModal">Добавить класс</button>
+    <button class="button grey" data-modal-id="removeGroupsModal">Удалить класс</button>
+  </div>
+</div>
+
+<!--модальное окно для добавления групп-->
+<div id="addGroupsModal" class="modal">
+  <div class="modal-content">
+    <form method="POST" action="{% url "tests_management:add_groups" test.id %}" class="modal-window-form">
+      {% csrf_token %}
+      <h2>Назначить тест группам:</h2>
+      {{ add_groups_form.groups }}
+      <button type="submit" class="button green">Сохранить</button>
+    </form>
+  </div>
+</div>
+
+<!--модальное окно для удаления групп-->
+<div id="removeGroupsModal" class="modal">
+  <div class="modal-content">
+    <form method="POST" action="{% url "tests_management:remove_groups" test.id %}" class="modal-window-form">
+      {% csrf_token %}
+      <h2>Отменить тест классам:</h2>
+      <p>(доступны только те классы, которые еще не писали тест):</p>
+      {{ remove_groups_form.groups }}
+      <button type="submit" class="button green">Сохранить</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

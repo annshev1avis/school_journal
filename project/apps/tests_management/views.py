@@ -1,13 +1,13 @@
 import random
 
-import django.forms
+from django.db import transaction
 from django.contrib import messages
 from django.views import generic
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 
-import apps.core.models as core_models
 from apps.core.views import ListFiltersMixin
+from apps.tests_app.models import TaskSolution
 from apps.tests_management import forms
 from apps.tests_management import models
 
@@ -32,6 +32,18 @@ class TestCreateView(generic.CreateView):
             kwargs={"pk": self.object.pk}
         )
 
+
+class TestDetailView(generic.DetailView):
+    model = models.Test
+    template_name = "tests_management/test_detail.html"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context["add_groups_form"] = forms.AddGroupsForm(self.get_object())
+        context["remove_groups_form"] = forms.RemoveGroupsForm(test=self.get_object())
+
+        return context
 
 class TestWithTasksUpdateView(generic.View):
     template_name = "tests_management/update_test.html"
@@ -117,4 +129,80 @@ class PublishTestView(generic.DetailView):
         test.save()
         
         messages.success(request, 'Тест успешно опубликован!')
-        return redirect(reverse_lazy("tests_management:update_test", args=[test.pk]))
+        return redirect(reverse_lazy("tests_management:test_detail", args=[test.pk]))
+    
+    
+class GroupsView(generic.DetailView):
+    model = models.Test
+    success_message = "Успешно!"
+    
+    def do_action(self, groups):
+        raise NotImplementedError
+    
+    def get_form(self):
+        raise NotImplementedError
+    
+    def post(self, request, *args, **kwargs):
+        self.test = self.get_object()
+        groups_form = self.get_form()
+        
+        if groups_form.is_valid():
+            groups_list = list(groups_form.cleaned_data["groups"])
+            self.do_action(groups_list)
+            messages.success(request, self.success_message)
+        else:
+            messages.error(request, f"Неверно заполнена форма: {groups_form.errors}")
+
+        return redirect(reverse_lazy("tests_management:test_detail", args={self.test.id}))
+
+
+class AddGroupsView(GroupsView):
+    success_message = "Тест успешно назначен"
+    
+    def get_form(self):
+        return forms.AddGroupsForm(self.test, data=self.request.POST)
+    
+    def do_action(self, groups_list):
+        """
+        Назначает тест выбранным группам и создает пустые TaskSolutions
+        для выставления будущих оценок
+        """
+        
+        self.test = self.get_object()
+        
+        with transaction.atomic():
+            self.test.groups.add(*groups_list)
+            
+            blank_task_solutions = []
+            for group in groups_list:
+                for student in group.students.all():
+                    for task in self.test.tasks.all():
+                        blank_task_solutions.append(
+                            TaskSolution(student=student, task=task)
+                        )
+                        
+            TaskSolution.objects.bulk_create(blank_task_solutions)
+
+
+class RemoveGroupsView(GroupsView):
+    success_message = "Тест успешно отменен"
+    
+    def get_form(self):
+        return forms.RemoveGroupsForm(self.test, data=self.request.POST)
+    
+    def do_action(self, groups_list):
+        """
+        Отменяет тест выбранным группам и удаляет
+        связанные TaskSolutions
+        """
+        
+        self.test = self.get_object()
+        
+        with transaction.atomic():
+            self.test.groups.remove(*groups_list)
+            
+            if groups_list:
+                TaskSolution.objects.filter(
+                    student__group__in=groups_list,
+                    task__test__id=self.test.id,
+                ).delete()
