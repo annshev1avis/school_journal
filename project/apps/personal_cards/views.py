@@ -1,5 +1,7 @@
 import datetime
 
+from django.contrib import messages
+from django.db import transaction
 from django.shortcuts import render, redirect
 from django.views import generic
 from django.urls import reverse_lazy
@@ -9,7 +11,7 @@ from apps.core.models import Subject, Group
 from apps.tests_app.models import TaskSolution, ResultsCalculator
 from apps.tests_management.models import TestAssign, Task, Test
 import apps.personal_cards.forms as forms
-from apps.personal_cards.models import PersonalMonthCard
+import apps.personal_cards.models as models
 from apps.core.views import ListFiltersMixin
 
 
@@ -21,7 +23,7 @@ class GroupsListView(ListFiltersMixin, generic.ListView):
     
 
 class GroupView(generic.ListView):
-    model = PersonalMonthCard
+    model = models.PersonalCard
     template_name = "personal_cards/group.html"
     context_object_name = "cards"
 
@@ -41,6 +43,13 @@ class GroupActiveCardsView(GroupView):
     def get_queryset(self):
         return super().get_queryset().filter(is_archived=False)
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        context["create_cards_form"] = forms.CreateCardsForm()
+        
+        return context
+
 
 class GroupArchivedCardsView(GroupView):
     template_name = "personal_cards/group_archived_cards.html"
@@ -49,11 +58,79 @@ class GroupArchivedCardsView(GroupView):
         return super().get_queryset().filter(is_archived=True)
 
 
+class CreateCardsView(generic.DetailView):
+    model = Group
+
+    subjects = Subject.objects.all()
+    softskills = models.SoftSkill.objects.all()
+
+    @staticmethod
+    def create_cards(group, start_date, end_date):
+        return [
+            models.PersonalCard.objects.create(
+                student=student,
+                start_date=start_date,
+                end_date=end_date
+            )
+            for student in group.students.all()
+        ]
+        
+    def create_recommendations(self, cards):
+        recs = [
+            models.PersonalRecommendations(card=card, subject=subject)
+            for subject in self.subjects
+            for card in cards
+        ]
+        models.PersonalRecommendations.objects.bulk_create(recs)
+        
+    def create_strengths(self, cards):
+        strengths = [
+            models.PersonalStrength(card=card, subject=subject)
+            for subject in self.subjects
+            for card in cards
+        ]
+        models.PersonalStrength.objects.bulk_create(strengths)
+        
+    def create_softskills_marks(self, cards):
+        marks = [
+            models.SoftSkillMark(card=card, skill=skill)
+            for card in cards
+            for skill in self.softskills
+        ]
+        models.SoftSkillMark.objects.bulk_create(marks)
+            
+    def post(self, request, pk):
+        group = self.get_object()
+        form = forms.CreateCardsForm(data=request.POST)
+
+        if form.is_valid():
+            with transaction.atomic():
+                # создание карточек
+                cards = self.create_cards(
+                    group=self.get_object(),
+                    start_date=form.cleaned_data["start_date"],
+                    end_date=form.cleaned_data["end_date"]
+                )
+                
+                # создание связанных объектов
+                self.create_recommendations(cards)
+                self.create_strengths(cards)
+                
+                if form.cleaned_data["add_softskills"]:
+                    self.create_softskills_marks(cards)
+                
+            messages.success(request, "Карточки успешно созданы!")
+        else:
+            messages.error(request, f"Ошибки при заполнении формы: {form.errors}")
+            
+        return redirect(reverse_lazy("personal_cards:group", args=[group.id]))
+                
+
 class CardView(generic.View):
     template_name = "personal_card.html"
     
     def dispatch(self, request, *args, **kwargs):
-        self.card = PersonalMonthCard.objects.get(
+        self.card = models.PersonalCard.objects.get(
             id=kwargs["card_id"]
         )
         return super().dispatch(request, *args, **kwargs)

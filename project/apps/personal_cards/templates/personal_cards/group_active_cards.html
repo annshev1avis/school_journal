@@ -1,19 +1,26 @@
 {% extends "personal_cards/group.html" %}
 {% block buttons %}
-<div style="display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  padding-bottom: 10px"
->
+<div class="space-between-container">
   <h1>
     Личные отчёты класса 
     {{ group.studing_year}}-{{ group.letter }} {{group.campus }}
   </h1>
-  <button class="button">Создать отчёты</button>
+  <button class="button" data-modal-id="createCardsModal">Создать отчёты</button>
 </div>
 <div style="padding-bottom: 30px;">
   <button class="button grey">Переместить всё архив</button>
   <a href="{% url "personal_cards:group_archived" group.id %}" class="button">Перейти в архив</a>
 </div>
+
+<div id="createCardsModal" class="modal">
+  <div class="modal-content">
+    <h2 class="modal-title">Создать отчёты для класса {{ group }}</h2>
+    <form method="POST" action="{% url "personal_cards:create_cards" group.id %}" class="modal-window-form">
+      {% csrf_token %}
+      {% include "includes/form_fields.html" with form=create_cards_form %}
+      <button type="submit" class="button green">Создать</button>
+    </form>
+  </div>
+</div>
+
 {% endblock %}

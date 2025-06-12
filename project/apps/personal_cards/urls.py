@@ -15,4 +15,9 @@ urlpatterns = [
         "cards/<int:card_id>/", views.CardView.as_view(),
         name="card",
     ),
+    path(
+        "groups/<int:pk>/create_cards/",
+        views.CreateCardsView.as_view(),
+        name="create_cards"
+    )
 ]

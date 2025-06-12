@@ -96,11 +96,11 @@ body {
     padding: 10px;
 }
 
+/* Заголовки */
 .page-title{
     font-size: 16pt;
     font-weight: 700;
     margin: 5px 0px 10px;
-
 }
 
 .list {
@@ -219,6 +219,7 @@ form {
 input, select {
     padding: 8px 12px;
     border-radius: 5px;
+    border: 1px solid #9296a2;
 }
 
 input {
@@ -338,6 +339,12 @@ th, td {
     margin: 0px;
 }
 
+.modal-title {
+    font-size: 14pt;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
 /* форма отображения нередактируемого теста*/
 .test-details {
     display: grid;
@@ -363,4 +370,13 @@ th, td {
 .detail-value {
     font-size: 16px;
     font-weight: 500;
+}
+
+/*  */
+.space-between-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding-bottom: 10px;
 }

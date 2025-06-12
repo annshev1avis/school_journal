@@ -3,7 +3,7 @@ from django.db import models
 from apps.core.models import Student, Subject
 
 
-class PersonalMonthCard(models.Model):
+class PersonalCard(models.Model):
     """
     Ежемесячный личный отчет об успеваемости ученика
     """
@@ -42,8 +42,8 @@ class PersonalRecommendations(models.Model):
     результатов по какому-то предмету. Заполняются вручную
     преподавателем.
     """
-    personal_card = models.ForeignKey(
-        PersonalMonthCard,
+    card = models.ForeignKey(
+        PersonalCard,
         on_delete=models.CASCADE,
         related_name="recommendations",
         verbose_name="к какой карточке относится",
@@ -70,8 +70,8 @@ class PersonalStrength(models.Model):
     по какому-то предмету. Заполняются вручную
     преподавателем.
     """
-    personal_card = models.ForeignKey(
-        PersonalMonthCard,
+    card = models.ForeignKey(
+        PersonalCard,
         on_delete=models.CASCADE,
         related_name="strengths",
         verbose_name="к какой карточке относится",
@@ -115,9 +115,10 @@ class SoftSkillMark(models.Model):
     в рамках составления личных отчетов
     """
     card = models.ForeignKey(
-        PersonalMonthCard,
+        PersonalCard,
         on_delete=models.CASCADE,
-        verbose_name="к какой карточке относится"
+        verbose_name="к какой карточке относится",
+        related_name="softskills_marks"
     )
     skill = models.ForeignKey(
         SoftSkill,
