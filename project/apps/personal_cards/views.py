@@ -136,7 +136,7 @@ class ArchiveCardsView(generic.DetailView):
             .update(is_archived=True)
         )
         return redirect(reverse_lazy("personal_cards:group", args=[pk]))
-                
+
 
 class CardView(generic.View):
     template_name = "personal_card.html"

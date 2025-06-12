@@ -1,5 +1,6 @@
-{% extends "personal_cards/group.html" %}
-{% block buttons %}
+{% extends "base.html" %}
+
+{% block content %}
 <div class="space-between-container">
   <h1>
     Личные отчёты класса 
@@ -11,7 +12,10 @@
   <button class="button grey" data-modal-id="archiveCardsModal">Переместить всё архив</button>
   <a href="{% url "personal_cards:group_archived" group.id %}" class="button">Перейти в архив</a>
 </div>
+{% include "personal_cards/cards_list.html" %}
 
+
+<!--модальные окна-->
 <div id="createCardsModal" class="modal">
   <div class="modal-content">
     <h2 class="modal-title">Создать отчёты для класса {{ group }}</h2>
@@ -26,7 +30,7 @@
 <div id="archiveCardsModal" class="modal">
   <div class="modal-content">
     <h2 class="modal-title">Вы действительно хотите переместить все активные карточки в архив?</h2>
-    <p style="margin-bottom:15px;">Карточки в архиве не подлежат редактированию</p>
+    <p style="margin-bottom:15px;">Это необратимое действие</p>
     <form method="POST" action="{% url "personal_cards:archive_cards" group.id %}" class="modal-window-form">
       {% csrf_token %}
       <button type="submit" class="button green">Да</button>

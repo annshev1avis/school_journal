@@ -1,6 +1,3 @@
-{% extends "base.html" %}
-{% block content %}
-{% block buttons %}{% endblock %}
 <div class="list">
   {% for card in cards %}
     <a href="{% url 'personal_cards:card' card.id %}">
@@ -13,4 +10,3 @@
     Записей нет
   {% endfor %}
 </div>
-{% endblock %}
