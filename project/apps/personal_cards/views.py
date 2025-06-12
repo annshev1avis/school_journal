@@ -124,6 +124,18 @@ class CreateCardsView(generic.DetailView):
             messages.error(request, f"Ошибки при заполнении формы: {form.errors}")
             
         return redirect(reverse_lazy("personal_cards:group", args=[group.id]))
+
+
+class ArchiveCardsView(generic.DetailView):
+    model = Group
+    
+    def post(self, request, pk):
+        (
+            models.PersonalCard.objects
+            .filter(student__group=self.get_object(), is_archived=False)
+            .update(is_archived=True)
+        )
+        return redirect(reverse_lazy("personal_cards:group", args=[pk]))
                 
 
 class CardView(generic.View):

@@ -19,5 +19,10 @@ urlpatterns = [
         "groups/<int:pk>/create_cards/",
         views.CreateCardsView.as_view(),
         name="create_cards"
+    ),
+    path(
+        "groups/<int:pk>/make_archived/",
+        views.ArchiveCardsView.as_view(),
+        name="archive_cards"
     )
 ]

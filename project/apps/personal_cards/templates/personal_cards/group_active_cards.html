@@ -8,7 +8,7 @@
   <button class="button" data-modal-id="createCardsModal">Создать отчёты</button>
 </div>
 <div style="padding-bottom: 30px;">
-  <button class="button grey">Переместить всё архив</button>
+  <button class="button grey" data-modal-id="archiveCardsModal">Переместить всё архив</button>
   <a href="{% url "personal_cards:group_archived" group.id %}" class="button">Перейти в архив</a>
 </div>
 
@@ -19,6 +19,17 @@
       {% csrf_token %}
       {% include "includes/form_fields.html" with form=create_cards_form %}
       <button type="submit" class="button green">Создать</button>
+    </form>
+  </div>
+</div>
+
+<div id="archiveCardsModal" class="modal">
+  <div class="modal-content">
+    <h2 class="modal-title">Вы действительно хотите переместить все активные карточки в архив?</h2>
+    <p style="margin-bottom:15px;">Карточки в архиве не подлежат редактированию</p>
+    <form method="POST" action="{% url "personal_cards:archive_cards" group.id %}" class="modal-window-form">
+      {% csrf_token %}
+      <button type="submit" class="button green">Да</button>
     </form>
   </div>
 </div>
