@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.views import generic
 from django.urls import reverse_lazy
 from django.db.models import F
+import pandas as pd
 
 from apps.core.models import Subject, Group
 from apps.tests_app.models import TaskSolution, ResultsCalculator
@@ -205,19 +206,21 @@ class CardView(generic.View):
 
         return tests_by_subjects
     
-    def get(self, request, card_id):
-        return render(
-            request,
-            "personal_cards/personal_card.html",
-            {
-                "card": self.card,
-                "tests_by_subject": self.get_tests_by_subjects(),
-                "repeat_topics": self.get_repeat_topics(),
-                "recommendations_formset": self.get_recommendations_formset(),
-                "strengths_formset": self.get_strengths_formset(), 
-            },
+    def get_softskills_marks(self):
+        marks_by_skill = {skill: [] for skill in models.SoftSkill.objects.all()}
+        marks = (
+            models.SoftSkillMark.objects
+            .filter(card__student=self.card.student)
+            .exclude(mark__isnull=True)
+            .order_by("-card__start_date")[:3]
         )
 
+        for mark in marks:
+            marks_by_skill[mark.skill].append(mark)
+        
+        return marks_by_skill
+        
+    
     def get_recommendations_formset(self):
         return forms.RecommendationsFormset(
             self.request.POST if self.request.POST else None,
@@ -229,16 +232,41 @@ class CardView(generic.View):
             self.request.POST if self.request.POST else None,
             instance=self.card,
         )
+        
+    def get_softskills_formset(self):
+        return forms.SofskillsFormset(
+            self.request.POST if self.request.POST else None,
+            instance=self.card,
+        )
+        
+    def get(self, request, card_id):
+        return render(
+            request,
+            "personal_cards/personal_card.html",
+            {
+                "card": self.card,
+                "tests_by_subject": self.get_tests_by_subjects(),
+                "repeat_topics": self.get_repeat_topics(),
+                "softskills_marks": self.get_softskills_marks(),
+                "recommendations_formset": self.get_recommendations_formset(),
+                "strengths_formset": self.get_strengths_formset(),
+                "softskills_formset": self.get_softskills_formset()
+            },
+        )
 
     def post(self, request, card_id):
         recommendations_formset = self.get_recommendations_formset()
         strengths_formset = self.get_strengths_formset()
+        softskills_formset = self.get_softskills_formset()
         
         if recommendations_formset.is_valid():
             recommendations_formset.save()
         
         if strengths_formset.is_valid():
             strengths_formset.save()
+            
+        if softskills_formset.is_valid():
+            softskills_formset.save()
             
         return redirect(reverse_lazy(
             "personal_cards:card", kwargs={"card_id": card_id}

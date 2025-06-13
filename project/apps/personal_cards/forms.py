@@ -43,3 +43,10 @@ StrengthsFormset = forms.inlineformset_factory(
     widgets={"text": forms.Textarea(attrs={"rows": None})},
     extra=0,
 )
+
+SofskillsFormset = forms.inlineformset_factory(
+    parent_model=models.PersonalCard,
+    model=models.SoftSkillMark,
+    fields=["mark"],
+    extra=0,
+)

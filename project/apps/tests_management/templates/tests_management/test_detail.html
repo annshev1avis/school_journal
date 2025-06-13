@@ -1,23 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Тест опубликован. Изменение данных уже невозможно</h1>
 
-<div class="test-details">
-  <div class="detail-card">
-    <span class="detail-label">Название</span>
-    <span class="detail-value">{{ test.name }}</span>
-  </div>
+<div class="details">
+  <h2 class="title">Информация о тесте</h2>
+  <div class="details-list">
+    <div class="detail-card">
+      <p class="detail-label">Название</p>
+      <p class="detail-value">{{ test.name }}</p>
+    </div>
 
-  <div class="detail-card">
-    <span class="detail-label">Предмет</span>
-    <span class="detail-value">{{ test.subject }}</span>
+    <div class="detail-card">
+      <p class="detail-label">Предмет</p>
+      <p class="detail-value">{{ test.subject }}</p>
+    </div>
+    
+    <div class="detail-card">
+      <p class="detail-label">Для какого класса</p>
+      <p class="detail-value">{{ test.studing_year }}</p>
+    </div>
   </div>
-  
-  <div class="detail-card">
-    <span class="detail-label">Для какого класса</span>
-    <span class="detail-value">{{ test.studing_year }}</span>
-  </div>
+  <p>Тест опубликован, редактирование данных уже не доступны</p>
 </div>
 
 <table>
@@ -26,7 +29,7 @@
     <col class="skill-col"/>
     <col class="max-points-col"/>
   </colgroup>
-  <caption>Задания</caption>
+  <caption class="title">Задания</caption>
   <thead>
     <tr>
       <th>Номер</th>
