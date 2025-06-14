@@ -1,0 +1,17 @@
+<div class="details">
+  <h1 class="page-title">Личная карточка</h1>
+  <div class="details-list">
+    <div class="card">
+      <p class="card-label">Ученик</p>
+      <p class="card-values">{{ card.student.surname }} {{ card.student.name }}</p>
+    </div>
+    <div class="card">
+      <p class="card-label">Класс</p>
+      <p class="card-values">{{ card.student.group }}</p>
+    </div>
+    <div class="card">
+      <p class="card-label">Период</p>
+      <p class="card-values">{{ card.batch.start_date|date:"d.m" }} - {{ card.batch.end_date|date:"d.m" }}</p>
+    </div>
+  </div>
+</div>

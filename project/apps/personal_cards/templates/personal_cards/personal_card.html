@@ -1,87 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="details">
-    <h1 class="page-title">Личная карточка</h1>
-    <div class="details-list">
-      <div class="card">
-        <p class="card-label">Ученик</p>
-        <p class="card-values">{{ card.student.surname }} {{ card.student.name }}</p>
-      </div>
-      <div class="card">
-        <p class="card-label">Класс</p>
-        <p class="card-values">{{ card.student.group }}</p>
-      </div>
-      <div class="card">
-        <p class="card-label">Период</p>
-        <p class="card-values">{{ card.batch.start_date|date:"d.m" }} - {{ card.batch.end_date|date:"d.m" }}</p>
-      </div>
-    </div>
-  </div>
-  
-  <h2 class="title">Стартовая и проверочные работы</h2>
-  <div style="margin: 10px 0px 35px;">
-    {% for subject, tests in tests_by_subject.items %}
-      <table style="margin-bottom: 5px;">
-          <tr>
-            <td class="bold">{{ subject.name }}</td>
-            {% for test_data in tests %}
-              <td>{{ test_data.test.name }} {{ test_data.test.get_month_display }}</td>
-            {% empty %}
-              <td>Проверочные не решались</td>
-            {% endfor %}
-          </tr>
-          <tr>
-            <td>Базовый уровень</td>
-            {% for test_data in tests %}
-              <td>{{ test_data.basic_percent }} %</td>
-            {% empty %}
-              <td>-</td>
-            {% endfor %}
-          </tr>
-          <tr>
-            <td>Рефлексивный уровень</td>
-            {% for test_data in tests %}
-              <td>
-                {% if test_data.reflexive_percent %}
-                  {{ test_data.reflexive_percent }} %
-                {% else %}
-                  -
-                {% endif %}
-              </td>
-            {% empty %}
-              <td>-</td>
-            {% endfor %}
-          </tr>
-      </table>
-    {% endfor %}
-  </div>
-
-  <table class="wide">
-    <caption class="title">Темы для повторения</caption>
-    <tr>
-      {% for subject in repeat_topics.keys %}
-        <td>{{ subject }}</td>
-      {% endfor %}
-    </tr>
-    <tr>
-      {% for topics in repeat_topics.values %}
-        <td>{{ topics|join:", " }}</td>
-      {% endfor %}
-    </tr>
-  </table>
-
-  <table>
-      <caption class="title">Умения в межпредметных заданиях</caption>
-      {% for skill, marks in softskills_marks.items %}
-        <tr>
-          <td>{{ skill.name }}</td>
-          {% for mark in marks %}
-            <td>{{ mark.mark }} ({{ mark.card.batch.start_date|date:"M Y" }})</td>
-          {% endfor %}
-        </tr>
-      {% endfor %}
-    </table>
+  {% include "personal_cards/card_parts/general_details.html" %}
+  {% include "personal_cards/card_parts/tests_results.html" %}
+  {% include "personal_cards/card_parts/repeat_topics.html" %}
+  {% include "personal_cards/card_parts/softskills.html" %}
 
   <form method="post">
     {% csrf_token %}
@@ -122,7 +45,6 @@
         {% endfor %}
       </tr>
     </table>
-
   
     {% if strengths_formset.errors %}
       <div class="errors">{{ strengths_formset.errors }}</div>
@@ -144,5 +66,6 @@
     </table>
 
     <button type="submit" class="button">Сохранить</button>
+    <a href="{% url "personal_cards:get_pdf_card" card.id %}" class="button" target="_blank">Скачать в pdf</a>
   </form>
 {% endblock %}

@@ -1,0 +1,19 @@
+<table class="table-with-textareas">
+  <caption class="title">Сильные стороны</caption>
+  <tr>
+    {% for subject_name in strengths.keys %}
+      <td>{{ subject_name }}</td>
+    {% endfor %}
+  </tr>
+  <tr>
+    {% for text in strengths.values %}
+      <td>
+        {% if text %}
+          {{ text }}
+        {% else %}
+          -
+        {% endif%}
+      </td>
+    {% endfor %}
+  </tr>
+</table>

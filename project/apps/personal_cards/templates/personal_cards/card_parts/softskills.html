@@ -1,0 +1,11 @@
+<table>
+  <caption class="title">Умения в межпредметных заданиях</caption>
+  {% for skill, marks in softskills.items %}
+    <tr>
+      <td>{{ skill.name }}</td>
+      {% for mark in marks %}
+        <td>{{ mark.mark }} ({{ mark.card.batch.start_date|date:"M Y" }})</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</table>

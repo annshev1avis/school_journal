@@ -1,0 +1,19 @@
+<table class="table-with-textareas">
+  <caption class="title">Индивидуальные рекомендации</caption>
+  <tr>
+    {% for subject_name in recommendations.keys %}
+      <td>{{ subject_name }}</td>
+    {% endfor %}
+  </tr>
+  <tr>
+    {% for text in recommendations.values %}
+      <td>
+        {% if text %}
+          {{ text }}
+        {% else %}
+          -
+        {% endif%}
+      </td>
+    {% endfor %}
+  </tr>
+</table>

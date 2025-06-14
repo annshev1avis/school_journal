@@ -1,0 +1,37 @@
+<h2 class="title">Стартовая и проверочные работы</h2>
+<div style="margin: 10px 0px 35px;">
+  {% for subject, tests in tests.items %}
+    <table style="margin-bottom: 5px;">
+        <tr>
+          <td class="bold">{{ subject.name }}</td>
+          {% for test_data in tests %}
+            <td>{{ test_data.test.name }} {{ test_data.test.get_month_display }}</td>
+          {% empty %}
+            <td>Проверочные не решались</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>Базовый уровень</td>
+          {% for test_data in tests %}
+            <td>{{ test_data.basic_percent }} %</td>
+          {% empty %}
+            <td>-</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <td>Рефлексивный уровень</td>
+          {% for test_data in tests %}
+            <td>
+              {% if test_data.reflexive_percent %}
+                {{ test_data.reflexive_percent }} %
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          {% empty %}
+            <td>-</td>
+          {% endfor %}
+        </tr>
+    </table>
+  {% endfor %}
+</div>

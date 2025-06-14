@@ -1,16 +1,21 @@
 import datetime
+import io
+import zipfile
 
 from django.contrib import messages
 from django.db import transaction
+from django.http import FileResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.template.loader import render_to_string
 from django.views import generic
 from django.urls import reverse_lazy
 from django.db.models import F
 import pandas as pd
+from weasyprint import HTML
 
 from apps.core.models import Subject, Group
 from apps.tests_app.models import TaskSolution, ResultsCalculator
-from apps.tests_management.models import TestAssign, Task, Test
+from apps.tests_management.models import Task, Test
 import apps.personal_cards.forms as forms
 import apps.personal_cards.models as models
 from apps.core.views import ListFiltersMixin
@@ -121,16 +126,12 @@ class DeleteBatchView(generic.View):
         return redirect(success_url)
 
 
-class CardView(generic.View):
-    template_name = "personal_card.html"
-    
-    def dispatch(self, request, *args, **kwargs):
-        self.card = models.PersonalCard.objects.get(
-            id=kwargs["card_id"]
-        )
-        return super().dispatch(request, *args, **kwargs)
-    
-    def get_written_tests(self):
+class CardConstructor:
+    """
+    Класс для формирования личных карточек. Предполагает наличие атрибута self.card
+    """
+
+    def _get_written_tests(self):
         """
         Возвращает тесты, написанные от 1 сентября текущего года
         до конца отчетного периода отчёта
@@ -147,7 +148,7 @@ class CardView(generic.View):
             testassign__writing_date__lte=self.card.batch.end_date,
             testassign__group=self.card.student.group
         ).order_by("testassign__writing_date")
-    
+
     def get_repeat_topics(self):
         """
         Возвращает темы заданий базового уровня с ошибками 
@@ -155,7 +156,7 @@ class CardView(generic.View):
         """      
         
         solutions_with_mistakes = TaskSolution.objects.filter(
-            task__test__in=self.get_written_tests(),
+            task__test__in=self._get_written_tests(),
             student=self.card.student,
             task__level=Task.BASIC,
             result__lt=F('task__max_points')
@@ -170,11 +171,11 @@ class CardView(generic.View):
             )
             
         return topics        
-    
-    def get_tests_by_subjects(self):
+
+    def get_tests_results(self):
         tests_by_subjects = {subject: [] for subject in Subject.objects.all()}
 
-        for test in self.get_written_tests():
+        for test in self._get_written_tests():
             calculator = ResultsCalculator(test, self.card.student)
             
             result = {"test": test, "basic_percent": "-", "reflexive_percent": "-"}
@@ -187,7 +188,7 @@ class CardView(generic.View):
             tests_by_subjects[test.subject].append(result)
 
         return tests_by_subjects
-    
+
     def get_softskills_marks(self):
         marks_by_skill = {skill: [] for skill in models.SoftSkill.objects.all()}
         marks = (
@@ -201,7 +202,26 @@ class CardView(generic.View):
             marks_by_skill[mark.skill].append(mark)
         
         return marks_by_skill
+
+    def get_recommendations(self):
+        return {
+            rec.subject.name: rec.text for rec in 
+            models.PersonalRecommendations.objects.filter(card=self.card)
+        }
+    
+    def get_strengths(self):
+        return {
+            s.subject.name: s.text for s in 
+            models.PersonalStrength.objects.filter(card=self.card)
+        }
         
+
+class CardView(generic.View, CardConstructor):
+    template_name = "personal_card.html"
+    
+    def dispatch(self, request, *args, **kwargs):
+        self.card = models.PersonalCard.objects.get(id=kwargs["card_id"])
+        return super().dispatch(request, *args, **kwargs)
     
     def get_recommendations_formset(self):
         return forms.RecommendationsFormset(
@@ -227,9 +247,9 @@ class CardView(generic.View):
             "personal_cards/personal_card.html",
             {
                 "card": self.card,
-                "tests_by_subject": self.get_tests_by_subjects(),
+                "tests": self.get_tests_results(),
                 "repeat_topics": self.get_repeat_topics(),
-                "softskills_marks": self.get_softskills_marks(),
+                "softskills": self.get_softskills_marks(),
                 "recommendations_formset": self.get_recommendations_formset(),
                 "strengths_formset": self.get_strengths_formset(),
                 "softskills_formset": self.get_softskills_formset()
@@ -253,3 +273,39 @@ class CardView(generic.View):
         return redirect(reverse_lazy(
             "personal_cards:card", kwargs={"card_id": card_id}
         ))
+
+
+class GetCardPDFView(generic.View, CardConstructor):
+    template_name = "personal_cards/personal_card_pdf.html"
+    
+    def get(self, request, *args, **kwargs):
+        self.card = get_object_or_404(models.PersonalCard, pk=self.kwargs["pk"])
+        
+        context = {
+            "card": self.card,
+            "tests": self.get_tests_results(),
+            "repeat_topics": self.get_repeat_topics(),
+            "softskills": self.get_softskills_marks(),
+            "recommendations": self.get_recommendations(),
+            "strengths": self.get_strengths(),
+        }
+
+        html = HTML(
+            string=render_to_string(self.template_name, context),
+            base_url=request.build_absolute_uri('/')
+        )
+        pdf_bytes = html.write_pdf()
+        
+        # Создаем файлоподобный объект из байтов
+        pdf_file = io.BytesIO(pdf_bytes)
+        
+        return FileResponse(
+            pdf_file,
+            as_attachment=True,
+            filename=self.get_pdf_filename(),
+            content_type='application/pdf'
+        )
+    
+    def get_pdf_filename(self):
+        card = get_object_or_404(models.PersonalCard, pk=self.kwargs["pk"])
+        return f"{card.student.surname} {card.student.name} от {card.batch.start_date}.pdf"

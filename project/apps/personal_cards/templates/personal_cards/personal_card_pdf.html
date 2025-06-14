@@ -1,0 +1,24 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <link href="{% static "css/styles.css" %}" rel="stylesheet" type="text/css"/>
+    <style>
+      @page {
+        size: A4 landscape;
+        margin: 1cm;
+      }
+      body { background-color: white; }
+    </style>
+  </head>
+  <body>
+    {% include "personal_cards/card_parts/general_details.html" %}
+    {% include "personal_cards/card_parts/tests_results.html" %}
+    {% include "personal_cards/card_parts/repeat_topics.html" %}
+    {% include "personal_cards/card_parts/softskills.html" %}
+    {% include "personal_cards/card_parts/recommendations.html" %}
+    {% include "personal_cards/card_parts/strengths.html" %}
+  </body>
+</html>

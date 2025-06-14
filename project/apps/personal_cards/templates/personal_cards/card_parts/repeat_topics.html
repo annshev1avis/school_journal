@@ -1,0 +1,13 @@
+<table class="wide">
+  <caption class="title">Темы для повторения</caption>
+  <tr>
+  {% for subject in repeat_topics.keys %}
+    <td>{{ subject }}</td>
+  {% endfor %}
+  </tr>
+  <tr>
+  {% for topics in repeat_topics.values %}
+    <td>{{ topics|join:", " }}</td>
+  {% endfor %}
+  </tr>
+</table>

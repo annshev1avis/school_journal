@@ -27,4 +27,8 @@ urlpatterns = [
         "cards/<int:card_id>/", views.CardView.as_view(),
         name="card",
     ),
+    path(
+        "cards/<int:pk>/pdf/", views.GetCardPDFView.as_view(),
+        name="get_pdf_card",
+    ),
 ]

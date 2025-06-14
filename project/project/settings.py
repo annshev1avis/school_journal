@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # third party
     "debug_toolbar",
+    "django_weasyprint",
     # созданные
     "apps.analytics.apps.AnalyticsConfig",
     "apps.core.apps.CoreConfig",
