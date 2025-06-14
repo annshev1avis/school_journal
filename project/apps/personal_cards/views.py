@@ -1,16 +1,15 @@
 import datetime
-import io
+from urllib.parse import quote
 import zipfile
 
 from django.contrib import messages
 from django.db import transaction
-from django.http import FileResponse, HttpResponse
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.template.loader import render_to_string
 from django.views import generic
 from django.urls import reverse_lazy
 from django.db.models import F
-import pandas as pd
 from weasyprint import HTML
 
 from apps.core.models import Subject, Group
@@ -296,16 +295,14 @@ class GetCardPDFView(generic.View, CardConstructor):
         )
         pdf_bytes = html.write_pdf()
         
-        # Создаем файлоподобный объект из байтов
-        pdf_file = io.BytesIO(pdf_bytes)
-        
-        return FileResponse(
-            pdf_file,
-            as_attachment=True,
-            filename=self.get_pdf_filename(),
-            content_type='application/pdf'
+        return HttpResponse(
+            content=pdf_bytes,
+            content_type='application/pdf',
+            headers={
+                "Content-Disposition": f"attachment; filename={self.get_pdf_filename()}"
+            }
         )
     
     def get_pdf_filename(self):
         card = get_object_or_404(models.PersonalCard, pk=self.kwargs["pk"])
-        return f"{card.student.surname} {card.student.name} от {card.batch.start_date}.pdf"
+        return quote(f"{card.student.surname} {card.student.name} от {card.batch.start_date}.pdf")
