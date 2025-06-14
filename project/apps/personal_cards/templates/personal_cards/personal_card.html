@@ -4,17 +4,17 @@
   <div class="details">
     <h1 class="page-title">Личная карточка</h1>
     <div class="details-list">
-      <div class="detail-card">
-        <p class="detail-label">Ученик</p>
-        <p class="detail-values">{{ card.student.surname }} {{ card.student.name }}</p>
+      <div class="card">
+        <p class="card-label">Ученик</p>
+        <p class="card-values">{{ card.student.surname }} {{ card.student.name }}</p>
       </div>
-      <div class="detail-card">
-        <p class="detail-label">Класс</p>
-        <p class="detail-values">{{ card.student.group }}</p>
+      <div class="card">
+        <p class="card-label">Класс</p>
+        <p class="card-values">{{ card.student.group }}</p>
       </div>
-      <div class="detail-card">
-        <p class="detail-label">Период</p>
-        <p class="detail-values">{{ card.start_date|date:"d.m" }} - {{ card.end_date|date:"d.m" }}</p>
+      <div class="card">
+        <p class="card-label">Период</p>
+        <p class="card-values">{{ card.batch.start_date|date:"d.m" }} - {{ card.batch.end_date|date:"d.m" }}</p>
       </div>
     </div>
   </div>
@@ -77,7 +77,7 @@
         <tr>
           <td>{{ skill.name }}</td>
           {% for mark in marks %}
-            <td>{{ mark.mark }} ({{ mark.card.start_date|date:"M Y" }})</td>
+            <td>{{ mark.mark }} ({{ mark.card.batch.start_date|date:"M Y" }})</td>
           {% endfor %}
         </tr>
       {% endfor %}

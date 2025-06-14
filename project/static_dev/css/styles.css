@@ -118,41 +118,6 @@ body {
     margin-bottom: 30px;
 }
 
-/* карточка и надписи на ней*/
-.card {
-    background-color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    height: fit-content;
-    border-radius: 5px;
-    max-width: 240px;
-    padding: 10px;
-    gap: 5px;
-}
-
-.card:hover {
-    cursor: pointer;
-}
-
-.card .section{
-    margin-bottom: 10px;
-}
-
-.card .primary{
-    font-size: 13pt;
-    font-weight: 700;
-}
-
-.card .secondary{
-    font-size: 13pt;
-}
-
-.card .unimportant{
-    font-size: 12pt;
-    color: #838383;
-}
-
 .button {
     height: fit-content;
     width: fit-content;
@@ -366,28 +331,37 @@ th, td {
     margin: 10px 0px 10px;
 }
 
-.detail-card {
+/* карточка */
+
+.card {
     background: #f9f9f9;
     border-radius: 8px;
     padding: 15px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.162);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.429);
     max-width: fit-content;
 }
 
-.detail-label {
+.card.info {
+    background: none;
+    box-shadow: none;
+}
+
+.card-label {
     display: block;
     font-size: 14px;
     color: #7f8c8d;
     margin-bottom: 5px;
 }
 
-.detail-value {
+.card-value {
     font-size: 16px;
     font-weight: 500;
 }
 
+.clickable:hover {
+    cursor: pointer;
+}
 
-/*  */
 .space-between-container {
     display: flex;
     justify-content: space-between;

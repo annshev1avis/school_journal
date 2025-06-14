@@ -2,7 +2,7 @@ import datetime
 
 from django.contrib import messages
 from django.db import transaction
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import generic
 from django.urls import reverse_lazy
 from django.db.models import F
@@ -23,57 +23,42 @@ class GroupsListView(ListFiltersMixin, generic.ListView):
     filter_fields = ["campus"]
     
 
-class GroupView(generic.ListView):
-    model = models.PersonalCard
-    template_name = "personal_cards/group.html"
-    context_object_name = "cards"
+class GroupBatchesListView(generic.ListView):
+    model = models.CardsBatch
+    context_object_name = "batches"
+    template_name = "personal_cards/group_batches.html"
 
     def get_queryset(self):
         group_id = self.kwargs["group_id"]
-        return super().get_queryset().filter(student__group_id=group_id)
+        return super().get_queryset().filter(group_id=group_id)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
         context["group"] = Group.objects.get(id=self.kwargs["group_id"])
-        return context
-
-
-class GroupActiveCardsView(GroupView):
-    template_name = "personal_cards/group_active_cards.html"
-    
-    def get_queryset(self):
-        return super().get_queryset().filter(is_archived=False)
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        context["create_cards_form"] = forms.CreateCardsForm()
+        context["create_batch_form"] = forms.CreateBatchForm()
         
         return context
 
 
-class GroupArchivedCardsView(GroupView):
-    template_name = "personal_cards/group_archived_cards.html"
-    
-    def get_queryset(self):
-        return super().get_queryset().filter(is_archived=True)
+class BatchView(generic.DetailView):
+    model = models.CardsBatch
+    template_name = "personal_cards/batch.html"
+    context_object_name = "batch"
 
 
-class CreateCardsView(generic.DetailView):
-    model = Group
-
+class CreateBatchWithCardsView(generic.View):
     subjects = Subject.objects.all()
     softskills = models.SoftSkill.objects.all()
 
     @staticmethod
-    def create_cards(group, start_date, end_date):
+    def create_cards(batch):
         return [
             models.PersonalCard.objects.create(
+                batch=batch,
                 student=student,
-                start_date=start_date,
-                end_date=end_date
             )
-            for student in group.students.all()
+            for student in batch.group.students.all()
         ]
         
     def create_recommendations(self, cards):
@@ -101,24 +86,24 @@ class CreateCardsView(generic.DetailView):
         models.SoftSkillMark.objects.bulk_create(marks)
             
     def post(self, request, pk):
-        group = self.get_object()
-        form = forms.CreateCardsForm(data=request.POST)
+        group = get_object_or_404(Group, pk=pk)
+        form = forms.CreateBatchForm(data=request.POST)
 
         if form.is_valid():
             with transaction.atomic():
                 # создание карточек
-                cards = self.create_cards(
-                    group=self.get_object(),
+                batch = models.CardsBatch.objects.create(
+                    group=group, 
                     start_date=form.cleaned_data["start_date"],
-                    end_date=form.cleaned_data["end_date"]
+                    end_date=form.cleaned_data["end_date"],
                 )
+                
+                cards = self.create_cards(batch=batch)
                 
                 # создание связанных объектов
                 self.create_recommendations(cards)
                 self.create_strengths(cards)
-                
-                if form.cleaned_data["add_softskills"]:
-                    self.create_softskills_marks(cards)
+                self.create_softskills_marks(cards)
                 
             messages.success(request, "Карточки успешно созданы!")
         else:
@@ -127,16 +112,13 @@ class CreateCardsView(generic.DetailView):
         return redirect(reverse_lazy("personal_cards:group", args=[group.id]))
 
 
-class ArchiveCardsView(generic.DetailView):
-    model = Group
-    
+class DeleteBatchView(generic.View):
     def post(self, request, pk):
-        (
-            models.PersonalCard.objects
-            .filter(student__group=self.get_object(), is_archived=False)
-            .update(is_archived=True)
-        )
-        return redirect(reverse_lazy("personal_cards:group", args=[pk]))
+        batch = get_object_or_404(models.CardsBatch, pk=pk)
+        success_url = reverse_lazy("personal_cards:group", args=[batch.group_id])
+        
+        batch.delete()
+        return redirect(success_url)
 
 
 class CardView(generic.View):
@@ -154,15 +136,15 @@ class CardView(generic.View):
         до конца отчетного периода отчёта
         """
         
-        card_month = self.card.start_date.month
-        card_year = self.card.start_date.year
+        card_month = self.card.batch.start_date.month
+        card_year = self.card.batch.start_date.year
         studing_year_started = datetime.date(
             card_year if card_month in (9, 10, 11, 12) else card_year - 1,
             9, 1,
         )
         return Test.objects.filter(
             testassign__writing_date__gte=studing_year_started,
-            testassign__writing_date__lte=self.card.end_date,
+            testassign__writing_date__lte=self.card.batch.end_date,
             testassign__group=self.card.student.group
         ).order_by("testassign__writing_date")
     
@@ -212,7 +194,7 @@ class CardView(generic.View):
             models.SoftSkillMark.objects
             .filter(card__student=self.card.student)
             .exclude(mark__isnull=True)
-            .order_by("-card__start_date")[:3]
+            .order_by("-card__batch__start_date")[:3]
         )
 
         for mark in marks:

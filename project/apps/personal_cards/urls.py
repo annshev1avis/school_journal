@@ -6,23 +6,25 @@ import apps.personal_cards.views as views
 app_name = "personal_cards"
 urlpatterns = [
     path("", views.GroupsListView.as_view(), name="groups_list"),
-    path("groups/<int:group_id>/", views.GroupActiveCardsView.as_view(), name="group"),
+    path("groups/<int:group_id>/", views.GroupBatchesListView.as_view(), name="group"),
+    # действия с папкой карточек
     path(
-        "<int:group_id>/archived/", views.GroupArchivedCardsView.as_view(),
-        name="group_archived"
+        "batch/<int:pk>/", views.BatchView.as_view(),
+        name="batch",
     ),
+    path(
+        "batch/<int:pk>/delete/",
+        views.DeleteBatchView.as_view(),
+        name="delete_batch"
+    ),
+    path(
+        "groups/<int:pk>/create_cards/",
+        views.CreateBatchWithCardsView.as_view(),
+        name="create_batch"
+    ),
+    # действия с карточкой
     path(
         "cards/<int:card_id>/", views.CardView.as_view(),
         name="card",
     ),
-    path(
-        "groups/<int:pk>/create_cards/",
-        views.CreateCardsView.as_view(),
-        name="create_cards"
-    ),
-    path(
-        "groups/<int:pk>/make_archived/",
-        views.ArchiveCardsView.as_view(),
-        name="archive_cards"
-    )
 ]

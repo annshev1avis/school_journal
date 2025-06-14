@@ -4,17 +4,12 @@ from django.core.exceptions import ValidationError
 import apps.personal_cards.models as models
 
 
-class CreateCardsForm(forms.Form):
+class CreateBatchForm(forms.Form):
     start_date = forms.DateField(
         label="Начало периода", widget=forms.DateInput(attrs={'type': 'date'})
     )
     end_date = forms.DateField(
         label="Конец периода", widget=forms.DateInput(attrs={'type': 'date'})
-    )
-    add_softskills = forms.BooleanField(
-        label="Добавить поля для оценивания межпредметных навыков",
-        initial=False,
-        required=False,
     )
     
     def clean(self):

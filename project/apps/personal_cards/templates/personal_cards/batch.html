@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 class="page-title">Папка с отчётами</h1>
+<div class="details">
+	<div class="details-list">
+		<div class="card info">
+			<p class="card-label">Класс</p>
+			<p class="card-value">{{ batch.group }}</p>
+		</div>
+		<div class="card info">
+			<p class="card-label">Начало периода</p>
+			<p class="card-value">{{ batch.start_date|date:"j E Y" }}</p>
+		</div>
+		<div class="card info">
+			<p class="card-label">Конец периода</p>
+			<p class="card-value">{{ batch.end_date|date:"j E Y" }}</p>
+		</div>
+	</div>
+</div>
+
+<div class="list">
+	{% for card in batch.cards.all %}
+		<a href="{% url 'personal_cards:card' card.id %}">
+			<div class="card">
+				<h3>{{ card.student.surname }} {{ card.student.name }}</h3>
+			</div>
+		</a>
+	{% empty %}
+		Записей нет
+	{% endfor %}
+</div>
+
+<a class="button" data-modal-id="deleteBatchModal">Удалить папку</a>
+
+<div id="deleteBatchModal" class="modal">
+	<div class="modal-content">
+		<form method="POST" action="{% url "personal_cards:delete_batch" batch.id %}" class="modal-window-form">
+			{% csrf_token %}
+			<p>
+				Вы уверены, что хотите удалить эту папку?
+				Это действие предполагает удаление всех карточек в папке
+				и является невозвратным
+			</p>
+			<button type="submit" class="button red">Удалить</button>
+		</form>
+	</div>
+</div>
+
+
+{% endblock %}

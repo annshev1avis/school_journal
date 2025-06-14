@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="space-between-container">
+  <h1 class="page-title">
+    Папки с личными отчётами класса 
+    {{ group.studing_year}}-{{ group.letter }} {{ group.campus }}
+  </h1>
+  <button class="button" data-modal-id="createCardsModal">Создать отчёты</button>
+</div>
+
+<div class="list">
+  {% for batch in batches %}
+    <a href="{% url 'personal_cards:batch' batch.id %}">
+      <div class="card clickable">
+        <div style="margin-bottom: 10px;">
+          <p class="card-label">Начало</p>
+          <p class="card-value">{{ batch.start_date|date:"j E Y" }}</p>
+        </div>
+        <p class="card-label">Конец</p>
+        <p class="card-value">{{ batch.end_date|date:"j E Y" }}</p>
+      </div>
+    </a>
+  {% empty %}
+    Записей нет
+  {% endfor %}
+</div>
+
+
+<!--модальные окна-->
+<div id="createCardsModal" class="modal">
+  <div class="modal-content">
+    <h2 class="modal-title">Создать отчёты для класса {{ group }}</h2>
+    <form method="POST" action="{% url "personal_cards:create_batch" group.id %}" class="modal-window-form">
+      {% csrf_token %}
+      {% include "includes/form_fields.html" with form=create_batch_form %}
+      <button type="submit" class="button green">Создать</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
