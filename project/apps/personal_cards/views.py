@@ -2,6 +2,7 @@ import datetime
 from urllib.parse import quote
 import zipfile
 
+from django.conf import settings
 from django.contrib import messages
 from django.db import transaction
 from django.http import HttpResponse
@@ -125,9 +126,10 @@ class DeleteBatchView(generic.View):
         return redirect(success_url)
 
 
-class CardConstructor:
+class CardConstructorMixin:
     """
-    Класс для формирования личных карточек. Предполагает наличие атрибута self.card
+    Предоставляет методы для формирования личных карточек.
+    Предполагает наличие атрибута self.card
     """
 
     def _get_written_tests(self):
@@ -213,52 +215,92 @@ class CardConstructor:
             s.subject.name: s.text for s in 
             models.PersonalStrength.objects.filter(card=self.card)
         }
+    
+    def get_recommendations_formset(self, post_data=None):
+        return forms.RecommendationsFormset(post_data, instance=self.card)
+        
+    def get_strengths_formset(self, post_data=None):
+        return forms.StrengthsFormset(post_data, instance=self.card)
+        
+    def get_softskills_formset(self, post_data=None):
+        return forms.SofskillsFormset(post_data, instance=self.card)
+    
+    def get_view_context(self):
+        """
+        Возвращает контекст для использования в CardView:
+        неизменяемые данные представлены в виде словарей,
+        изменяемые - в виде форм
+        """
+        return {
+            "card": self.card,
+            "tests": self.get_tests_results(),
+            "repeat_topics": self.get_repeat_topics(),
+            "softskills": self.get_softskills_marks(),
+            "recommendations_formset": self.get_recommendations_formset(),
+            "strengths_formset": self.get_strengths_formset(),
+            "softskills_formset": self.get_softskills_formset()
+        }
+    
+    def get_pdf_context(self):
+        """
+        Возвращает контекст для формирования pdf-документа
+        """
+        return {
+            "card": self.card,
+            "tests": self.get_tests_results(),
+            "repeat_topics": self.get_repeat_topics(),
+            "softskills": self.get_softskills_marks(),
+            "recommendations": self.get_recommendations(),
+            "strengths": self.get_strengths(),
+        }
+        
+    def get_pdf(self):
+        """
+        Возвращает pdf-документ в виде последовательности байтов
+        """
+        html_string = render_to_string(
+            template_name="personal_cards/personal_card_pdf.html",
+            context=self.get_pdf_context(),
+        )
+        html = HTML(
+            string=html_string,
+            base_url=settings.BASE_DIR,
+        )
+        return html.write_pdf()
+        
+    def get_pdf_filename(self):
+        return quote(
+            f"{self.card.student.surname} {self.card.student.name} "
+            f"от {self.card.batch.start_date}.pdf"
+        )
         
 
-class CardView(generic.View, CardConstructor):
+class CardConstructor(CardConstructorMixin):
+    """
+    Самостоятельный класс для отображения карточки
+    """
+    def __init__(self, card):
+        self.card = card
+        
+
+class CardView(generic.View, CardConstructorMixin):
     template_name = "personal_card.html"
     
     def dispatch(self, request, *args, **kwargs):
-        self.card = models.PersonalCard.objects.get(id=kwargs["card_id"])
+        self.card=models.PersonalCard.objects.get(id=kwargs["card_id"])
         return super().dispatch(request, *args, **kwargs)
-    
-    def get_recommendations_formset(self):
-        return forms.RecommendationsFormset(
-            self.request.POST if self.request.POST else None,
-            instance=self.card,
-        )
-        
-    def get_strengths_formset(self):
-        return forms.StrengthsFormset(
-            self.request.POST if self.request.POST else None,
-            instance=self.card,
-        )
-        
-    def get_softskills_formset(self):
-        return forms.SofskillsFormset(
-            self.request.POST if self.request.POST else None,
-            instance=self.card,
-        )
         
     def get(self, request, card_id):
         return render(
             request,
             "personal_cards/personal_card.html",
-            {
-                "card": self.card,
-                "tests": self.get_tests_results(),
-                "repeat_topics": self.get_repeat_topics(),
-                "softskills": self.get_softskills_marks(),
-                "recommendations_formset": self.get_recommendations_formset(),
-                "strengths_formset": self.get_strengths_formset(),
-                "softskills_formset": self.get_softskills_formset()
-            },
+            self.get_view_context(),
         )
 
     def post(self, request, card_id):
-        recommendations_formset = self.get_recommendations_formset()
-        strengths_formset = self.get_strengths_formset()
-        softskills_formset = self.get_softskills_formset()
+        recommendations_formset = self.get_recommendations_formset(request.POST)
+        strengths_formset = self.get_strengths_formset(request.POST)
+        softskills_formset = self.get_softskills_formset(request.POST)
         
         if recommendations_formset.is_valid():
             recommendations_formset.save()
@@ -274,35 +316,16 @@ class CardView(generic.View, CardConstructor):
         ))
 
 
-class GetCardPDFView(generic.View, CardConstructor):
+class GetCardPDFView(generic.View, CardConstructorMixin):
     template_name = "personal_cards/personal_card_pdf.html"
     
     def get(self, request, *args, **kwargs):
         self.card = get_object_or_404(models.PersonalCard, pk=self.kwargs["pk"])
         
-        context = {
-            "card": self.card,
-            "tests": self.get_tests_results(),
-            "repeat_topics": self.get_repeat_topics(),
-            "softskills": self.get_softskills_marks(),
-            "recommendations": self.get_recommendations(),
-            "strengths": self.get_strengths(),
-        }
-
-        html = HTML(
-            string=render_to_string(self.template_name, context),
-            base_url=request.build_absolute_uri('/')
-        )
-        pdf_bytes = html.write_pdf()
-        
         return HttpResponse(
-            content=pdf_bytes,
+            content=self.get_pdf(),
             content_type='application/pdf',
             headers={
                 "Content-Disposition": f"attachment; filename={self.get_pdf_filename()}"
             }
         )
-    
-    def get_pdf_filename(self):
-        card = get_object_or_404(models.PersonalCard, pk=self.kwargs["pk"])
-        return quote(f"{card.student.surname} {card.student.name} от {card.batch.start_date}.pdf")
