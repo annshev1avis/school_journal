@@ -1,4 +1,5 @@
 import datetime
+import io
 from urllib.parse import quote
 import zipfile
 
@@ -268,11 +269,14 @@ class CardConstructorMixin:
         )
         return html.write_pdf()
         
-    def get_pdf_filename(self):
-        return quote(
+    def get_filename(self):
+        return (
             f"{self.card.student.surname} {self.card.student.name} "
             f"от {self.card.batch.start_date}.pdf"
         )
+    
+    def get_pdf_filename(self):
+        return quote(self.get_filename())
         
 
 class CardConstructor(CardConstructorMixin):
@@ -316,7 +320,11 @@ class CardView(generic.View, CardConstructorMixin):
         ))
 
 
-class GetCardPDFView(generic.View, CardConstructorMixin):
+class DownloadCardView(generic.View, CardConstructorMixin):
+    """
+    Возвращает HttpResponse с pdf-файлом и соответствующими заголовками
+    """
+
     template_name = "personal_cards/personal_card_pdf.html"
     
     def get(self, request, *args, **kwargs):
@@ -329,3 +337,28 @@ class GetCardPDFView(generic.View, CardConstructorMixin):
                 "Content-Disposition": f"attachment; filename={self.get_pdf_filename()}"
             }
         )
+
+
+class DownloadBatchCards(generic.View):
+    def get(self, request, pk):
+        batch = get_object_or_404(models.CardsBatch, pk=pk)
+        
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip:
+            for card in batch.cards.all():
+                constructor = CardConstructor(card)
+                zip.writestr(
+                    constructor.get_filename(),
+                    constructor.get_pdf(),
+                )
+        
+        filename = f"{batch.group} за {batch.start_date}.zip"
+        buffer.seek(0)
+        return HttpResponse(
+            content=buffer.getvalue(),
+            content_type='application/zip',
+            headers={
+                "Content-Disposition": f"attachment; filename={quote(filename)}"
+            }
+        )    
+            

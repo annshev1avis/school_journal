@@ -31,7 +31,9 @@
 	{% endfor %}
 </div>
 
-<a class="button">Скачать архив с отчётами в pdf</a>
+<a href="{% url "personal_cards:download_batch_cards" batch.id %}" class="button">
+	Скачать архив с отчётами в pdf
+</a>
 <button class="button" data-modal-id="deleteBatchModal">Удалить папку</button>
 
 <div id="deleteBatchModal" class="modal">

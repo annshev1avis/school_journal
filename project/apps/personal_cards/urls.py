@@ -9,11 +9,11 @@ urlpatterns = [
     path("groups/<int:group_id>/", views.GroupBatchesListView.as_view(), name="group"),
     # действия с папкой карточек
     path(
-        "batch/<int:pk>/", views.BatchView.as_view(),
+        "batches/<int:pk>/", views.BatchView.as_view(),
         name="batch",
     ),
     path(
-        "batch/<int:pk>/delete/",
+        "batches/<int:pk>/delete/",
         views.DeleteBatchView.as_view(),
         name="delete_batch"
     ),
@@ -22,13 +22,17 @@ urlpatterns = [
         views.CreateBatchWithCardsView.as_view(),
         name="create_batch"
     ),
+    path(
+        "batches/<int:pk>/pdf/", views.DownloadBatchCards.as_view(),
+        name="download_batch_cards",
+    ),
     # действия с карточкой
     path(
         "cards/<int:card_id>/", views.CardView.as_view(),
         name="card",
     ),
     path(
-        "cards/<int:pk>/pdf/", views.GetCardPDFView.as_view(),
-        name="get_pdf_card",
+        "cards/<int:pk>/pdf/", views.DownloadCardView.as_view(),
+        name="download_card",
     ),
 ]
