@@ -28,9 +28,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # third party
-    "debug_toolbar",
-    "django_weasyprint",
     # созданные
     "apps.analytics.apps.AnalyticsConfig",
     "apps.core.apps.CoreConfig",
@@ -39,6 +36,9 @@ INSTALLED_APPS = [
     "apps.tests_management.apps.TestsManagementConfig",
     "apps.users.apps.UsersConfig",
 ]
+
+if DEBUG:
+    INSTALLED_APPS.append("debug_toolbar")
 
 MIDDLEWARE = [
     # встроенные
@@ -49,11 +49,12 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # third party
-    "debug_toolbar.middleware.DebugToolbarMiddleware",
     # созданные
     "apps.core.middleware.AuthRequiredMiddleware",
 ]
+
+if DEBUG:
+    MIDDLEWARE.append("debug_toolbar.middleware.DebugToolbarMiddleware")
 
 ROOT_URLCONF = "project.urls"
 

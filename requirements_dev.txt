@@ -1,0 +1,6 @@
+django==4.2
+python-dotenv==1.0.1
+weasyprint==65.1
+pandas
+plotly
+django-debug-toolbar==5.2.0
