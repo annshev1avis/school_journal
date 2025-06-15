@@ -6,11 +6,19 @@ from apps.core.models import Group
 from apps.tests_management import models
 
 
-class TestForm(forms.ModelForm):
+class TestCreateForm(forms.ModelForm):
     class Meta:
         model = models.Test
         fields = [
             "name", "subject", "with_reflexive_level", "studing_year", "month",
+        ]
+        
+
+class TestUpdateForm(forms.ModelForm):
+    class Meta:
+        model = models.Test
+        fields = [
+            "name", "subject", "studing_year", "month",
         ]
 
 
@@ -69,9 +77,6 @@ class DualTaskForm(forms.Form):
         if reflexive_instance:
             self.fields['reflexive_max_points'].initial = reflexive_instance.max_points
 
-    def is_valid(self):
-        return super().is_valid()
-
     def save(self):
         data = self.cleaned_data
         with transaction.atomic():
@@ -104,12 +109,25 @@ class DualTaskForm(forms.Form):
         return self.basic_instance is not None and self.reflexive_instance is not None
 
 
-class BaseDualTaskFormSet(forms.BaseFormSet):
+class TaskCleanMixin:
+    def clean(self):
+        if any(self.errors):
+            return
+
+        nums = []
+        for form in self.forms:
+            num = form.cleaned_data.get('num')
+            if num in nums:
+                raise forms.ValidationError("Номера заданий не должны повторяться.")
+            nums.append(num)
+
+
+class BaseDualTaskFormSet(TaskCleanMixin, forms.BaseFormSet):
     deletion_widget = forms.HiddenInput(attrs={"class": "deletion-widget"})
     
     def __init__(self, *args, instance, queryset=None, **kwargs):
         self.instance = instance
-        self.queryset = queryset or self.instance.tasks
+        self.queryset = queryset or self.instance.tasks.all()
         self.dual_instances = []  # список пар (basic, reflexive)
         
         # Группируем по num
@@ -162,7 +180,7 @@ class BaseDualTaskFormSet(forms.BaseFormSet):
                 form.delete()
 
 
-class BaseTaskFormSet(forms.BaseInlineFormSet):
+class BaseTaskFormSet(forms.BaseInlineFormSet, TaskCleanMixin):
     deletion_widget = forms.HiddenInput(attrs={"class": "deletion-widget"})
     
     

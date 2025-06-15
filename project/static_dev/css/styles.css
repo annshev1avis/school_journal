@@ -180,12 +180,21 @@ form > * {
     font-weight: 700;
 }
 
-.error-list {
+.errorlist{
+    color: red;
     list-style: none;
-    color: #d32f2f;
+    font-size: 10pt;
+}
+
+.errors-box {
+    background-color: #fb9999;
+    border: 1px solid red;
+    border-radius: 5px;
     font-size: 10pt;
     margin-top: 5px;
-    padding-left: 0;
+    padding: 10px;
+    padding-left: 20px;
+    width: fit-content;
 }
 
 /*поля ввода*/

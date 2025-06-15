@@ -24,7 +24,7 @@ class TestListView(ListFiltersMixin, generic.ListView):
 class TestCreateView(generic.CreateView):
     model = models.Test
     template_name = "tests_management/create_test.html"
-    form_class = forms.TestForm
+    form_class = forms.TestCreateForm
     
     def get_success_url(self):
         return reverse_lazy(
@@ -60,7 +60,7 @@ class TestWithTasksUpdateView(generic.View):
     def get(self, request, pk):
         test = get_object_or_404(models.Test, pk=pk)
         
-        test_form = forms.TestForm(instance=test)
+        test_form = forms.TestUpdateForm(instance=test)
         tasks_formset = self.get_tasks_formset(test)
     
         return render(
@@ -77,7 +77,7 @@ class TestWithTasksUpdateView(generic.View):
     def post(self, request, pk):
         test = get_object_or_404(models.Test, pk=pk)
         
-        test_form = forms.TestForm(request.POST, instance=test)
+        test_form = forms.TestUpdateForm(request.POST, instance=test)
         tasks_formset = self.get_tasks_formset(test, post_data=request.POST)
         
         if test_form.is_valid() and tasks_formset.is_valid():
@@ -86,8 +86,7 @@ class TestWithTasksUpdateView(generic.View):
                 
             messages.success(request, "Изменения сохранены")
             return redirect(reverse_lazy("tests_management:update_test", kwargs={"pk": test.pk}))
-        
-        print(tasks_formset.is_valid(), tasks_formset.non_form_errors(), tasks_formset.errors)
+            
         messages.error(request, "Ошибки при заполнении формы")
         return render(
             request,
