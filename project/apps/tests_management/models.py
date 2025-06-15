@@ -60,16 +60,6 @@ class Test(models.Model):
 
     def __str__(self):
         return f"{self.name} {self.studing_year} класс"
-    
-    def save(self, *args, **kwargs):
-        if self.id:
-            self.with_reflexive_level = False
-            for task in self.tasks.all():
-                if task.level == Task.REFLEXIVE:
-                    self.with_reflexive_level = True
-                    break
-        
-        super().save(*args, **kwargs)
         
     def get_total_points(self, level):
         tasks = self.tasks.filter(level=level)

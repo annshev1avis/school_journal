@@ -48,15 +48,20 @@ class TestDetailView(generic.DetailView):
 class TestWithTasksUpdateView(generic.View):
     template_name = "tests_management/update_test.html"
     
+    def get_tasks_formset(self, test, post_data=None):
+        formset_class = forms.DualTaskFormset if test.with_reflexive_level else forms.TaskFormset
+        return formset_class(
+            data=post_data if post_data else None,
+            instance=test,
+            queryset=test.tasks.order_by("num"),
+            prefix="form"
+        )
+    
     def get(self, request, pk):
         test = get_object_or_404(models.Test, pk=pk)
         
         test_form = forms.TestForm(instance=test)
-        tasks_formset = forms.TaskFormSet(
-            instance=test,
-            queryset=test.tasks.order_by("num", "level")
-        )
-        test_assigns = models.TestAssign.objects.filter(test=test)
+        tasks_formset = self.get_tasks_formset(test)
     
         return render(
             request,
@@ -65,7 +70,7 @@ class TestWithTasksUpdateView(generic.View):
                 "test": test,
                 "test_form": test_form,
                 "tasks_formset": tasks_formset,
-                "test_assigns": test_assigns,
+                "test_assigns": models.TestAssign.objects.filter(test=test),
             }
         )
 
@@ -73,7 +78,7 @@ class TestWithTasksUpdateView(generic.View):
         test = get_object_or_404(models.Test, pk=pk)
         
         test_form = forms.TestForm(request.POST, instance=test)
-        tasks_formset = forms.TaskFormSet(request.POST, instance=test, queryset=test.tasks)
+        tasks_formset = self.get_tasks_formset(test, post_data=request.POST)
         
         if test_form.is_valid() and tasks_formset.is_valid():
             test = test_form.save()
@@ -82,15 +87,16 @@ class TestWithTasksUpdateView(generic.View):
             messages.success(request, "Изменения сохранены")
             return redirect(reverse_lazy("tests_management:update_test", kwargs={"pk": test.pk}))
         
+        print(tasks_formset.is_valid(), tasks_formset.non_form_errors(), tasks_formset.errors)
         messages.error(request, "Ошибки при заполнении формы")
         return render(
             request,
             self.template_name,
             {
-                "test_pk": test.pk,
-                "form": test_form,
+                "test": test,
+                "test_form": test_form,
                 "tasks_formset": tasks_formset,
-                "uniq_stamp": random.random()
+                "test_assigns": models.TestAssign.objects.filter(test=test),
             }
         )
 

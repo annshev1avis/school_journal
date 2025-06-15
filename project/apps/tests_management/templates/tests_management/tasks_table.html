@@ -1,0 +1,34 @@
+<thead>
+  <tr>
+    <th>Номер</th>
+    <th>Проверяемый навык</th>
+    <th>Макс. кол-во баллов</th>
+    <th></th>
+  </tr>
+</thead>
+<tbody id="form-container">
+  {% for form in tasks_formset %}
+  <tr class="task-form">
+    {{ form.id }}
+    <td>
+      {{ form.num.errors }}
+      {{ form.num }}
+    </td>
+    <td>
+      {{ form.checked_skill.errors }}
+      {{ form.checked_skill }}
+    </td>
+    <td>
+      {{ form.max_points.errors }}
+      {{ form.max_points }}
+    </td>
+    <td>
+      {{ form.DELETE }}
+      <button type="button" class="button grey delete-form">Удалить</button>
+    </td>
+  </tr>
+  {% empty %}
+    <tr><td colspan="4">В тесте пока нет заданий</td></tr>
+  {% endfor %}
+  <tr id="form-container-bottom"></tr>
+</tbody>

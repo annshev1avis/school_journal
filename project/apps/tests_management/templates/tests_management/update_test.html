@@ -10,56 +10,21 @@
   {% include "includes/form_errors.html" with form=test_form %}
   {% include "includes/form_fields.html" with form=test_form %}
 
-  {{ tasks_formset.management_form }}
-  <table class="add-tasks-table">
-    <colgroup>
-      <col span="2" class="num-col"/>
-      <col class="skill-col"/>
-      <col class="max-points-col"/>
-    </colgroup>
-    <caption>Задания</caption>
-    <thead>
-      <tr>
-        <th>Номер</th>
-        <th>Уровень</th>
-        <th>Проверяемый навык</th>
-        <th>Макс. количество баллов</th>
-        <th>Удалить</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for form in tasks_formset %}
-      <tr>
-        {{ form.id }}
-        <td>
-          {{ form.num.errors }}
-          {{ form.num }}
-        </td>
-        <td>
-          {{ form.level.errors }}
-          {{ form.level }}
-        </td>
-        <td>
-          {{ form.checked_skill.errors }}
-          {{ form.checked_skill }}
-        </td>
-        <td>
-          {{ form.max_points.errors }}
-          {{ form.max_points }}
-        </td>
-        <td>
-          {{ form.DELETE }}
-        </td>
-      </tr>
-      {% empty %}
-        <tr><td colspan="5">В тесте пока нет заданий</td></tr>
-      {% endfor %}
-    </tbody>
+  <table class="wide">
+  <caption class="title">Задания</caption>
+    {{ tasks_formset.management_form }}
+
+    {% if test.with_reflexive_level %}
+      {% include "tests_management/tasks_table_with_reflexive.html" %}
+    {% else %}
+      {% include "tests_management/tasks_table.html" %}
+    {% endif %}
   </table>
+
   <div class="buttons-group">
     <h4>Редактирование:</h4>
       <div>
-        <a class="button" href="{% url 'tests_management:create_task' test.id %}">Добавить задание</a>
+        <button id="add-form" class="button">Добавить задание</button>
         <button type="submit" class="button">Сохранить</button>
       </div>
   </div>
@@ -89,4 +54,55 @@
     </form>
   </div>
 </div>
+{% endblock %}
+
+{% block script %}
+{% comment %} <script src="{% static "tests_management/adding_forms.js" %}"></script> {% endcomment %}
+<script>
+  let taskForms = document.querySelectorAll(".task-form");
+let container = document.querySelector("#form-container");
+let containerBottom = document.querySelector("#form-container-bottom");
+let addButton = document.querySelector("#add-form");
+let totalForms = document.querySelector("#id_form-TOTAL_FORMS");
+
+let formNum = taskForms.length-1;
+
+addButton.addEventListener('click', addForm);
+function addForm(e) {
+    e.preventDefault();
+
+    let newForm = taskForms[0].cloneNode(true);
+    let formRegex = RegExp(`form-(\\d){1}-`,'g'); // Regex чтобы находить номера форм
+
+    formNum++;
+    newForm.innerHTML = newForm.innerHTML.replace(formRegex, `form-${formNum}-`); // обновляет номер формы
+    newForm.querySelectorAll('input').forEach(el => {el.value = ""});
+    container.insertBefore(newForm, containerBottom);
+
+    totalForms.setAttribute('value', `${formNum+1}`);
+}
+</script>
+<script>
+  // удаление форм
+  document.addEventListener("DOMContentLoaded", function() {
+    const formContainer = document.getElementById("form-container");
+
+    formContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains("delete-form")) {
+            e.preventDefault();
+            console.log("Delete clicked!");
+            
+            const formRow = e.target.closest(".task-form");
+            const deleteWidget = formRow.querySelector(".deletion-widget");
+            
+            if (deleteWidget) {
+                deleteWidget.value = "on";
+                formRow.style.display = "none";
+            } else {
+                console.error("DELETE widget not found!");
+            }
+        }
+    });
+  });
+</script>
 {% endblock %}

@@ -1,8 +1,6 @@
 document.addEventListener('click', (e) => {
-    console.log("hello");
     const modalId = e.target.dataset.modalId;
 
-    console.log(modalId);
     if (modalId) showModal(modalId);
 });
 
