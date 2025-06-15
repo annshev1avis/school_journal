@@ -1,5 +1,5 @@
 django==4.2
 python-dotenv==1.0.1
-django-weasyprint
-pandas
-plotly
+weasyprint==65.1
+pandas==2.3.0
+plotly==6.1.2
