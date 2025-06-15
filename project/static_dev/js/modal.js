@@ -16,5 +16,6 @@ function showModal(modalId) {
 }
 
 function hideModal(modalId) {
+    console.log("hide modal")
     document.getElementById(modalId).style.display = "none";
 }

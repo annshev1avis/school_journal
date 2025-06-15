@@ -115,7 +115,14 @@ class TaskCleanMixin:
             return
 
         nums = []
+        
         for form in self.forms:
+            if self.can_delete and self._should_delete_form(form):
+                continue
+            
+            if form.empty_permitted and not form.has_changed():
+                continue
+
             num = form.cleaned_data.get('num')
             if num in nums:
                 raise forms.ValidationError("Номера заданий не должны повторяться.")
@@ -172,15 +179,19 @@ class BaseDualTaskFormSet(TaskCleanMixin, forms.BaseFormSet):
 
     def save(self):
         for form in self.forms:
+            if form in self.deleted_forms:
+                continue
+            
             if form.has_changed() and form.is_valid():
                 form.save()
                 
         for form in self.deleted_forms:
             if form.has_instances:
+                print(form.cleaned_data.get("num"), "deleted from db!")
                 form.delete()
 
 
-class BaseTaskFormSet(forms.BaseInlineFormSet, TaskCleanMixin):
+class BaseTaskFormSet(TaskCleanMixin, forms.BaseInlineFormSet):
     deletion_widget = forms.HiddenInput(attrs={"class": "deletion-widget"})
     
     

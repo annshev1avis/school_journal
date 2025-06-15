@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 
+from django.core import validators
 import apps.core.models
 from apps.core.constants import STUDING_MONTHES_DICT
 
@@ -127,6 +128,7 @@ class Task(models.Model):
     )
     num = models.IntegerField(
         "номер задания в проверочной",
+        validators=[validators.MinValueValidator(1, "Минимальное допустимое значение 1")]
     )
     level = models.CharField(
         "уровень",
@@ -140,6 +142,10 @@ class Task(models.Model):
     )
     max_points = models.IntegerField(
         "максимальное количество баллов",
+        validators=[
+            validators.MinValueValidator(1, "Минимальное допустимое значение 1"),
+            validators.MaxValueValidator(100, "Максимально допустимое значение 100")
+        ]
     )
 
     class Meta:

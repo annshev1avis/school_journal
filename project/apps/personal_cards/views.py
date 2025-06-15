@@ -42,7 +42,9 @@ class GroupBatchesListView(generic.ListView):
         context = super().get_context_data(**kwargs)
         
         context["group"] = Group.objects.get(id=self.kwargs["group_id"])
-        context["create_batch_form"] = forms.CreateBatchForm()
+        context["create_batch_form"] = forms.CreateBatchForm(
+            self.request.POST or None
+        )
         
         return context
 
@@ -112,9 +114,11 @@ class CreateBatchWithCardsView(generic.View):
                 self.create_softskills_marks(cards)
                 
             messages.success(request, "Карточки успешно созданы!")
-        else:
-            messages.error(request, f"Ошибки при заполнении формы: {form.errors}")
             
+        else:
+            print(dict(form.errors))
+            messages.error(request, f"Ошибки при заполнении формы: {form.errors}")
+        
         return redirect(reverse_lazy("personal_cards:group", args=[group.id]))
 
 

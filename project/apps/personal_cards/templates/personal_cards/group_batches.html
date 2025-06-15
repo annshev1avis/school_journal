@@ -28,9 +28,11 @@
 
 
 <!--модальные окна-->
+{{ show_batch_form }}
 <div id="createCardsModal" class="modal">
   <div class="modal-content">
     <h2 class="modal-title">Создать отчёты для класса {{ group }}</h2>
+    {% include "includes/form_errors.html" with form=create_batch_form %}
     <form method="POST" action="{% url "personal_cards:create_batch" group.id %}" class="modal-window-form">
       {% csrf_token %}
       {% include "includes/form_fields.html" with form=create_batch_form %}

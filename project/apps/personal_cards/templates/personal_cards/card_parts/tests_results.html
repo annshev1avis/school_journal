@@ -13,7 +13,7 @@
         <tr>
           <td>Базовый уровень</td>
           {% for test_data in tests %}
-            <td>{{ test_data.basic_percent }} %</td>
+            <td>{{ test_data.basic_percent|floatformat:0 }} %</td>
           {% empty %}
             <td>-</td>
           {% endfor %}
@@ -23,7 +23,7 @@
           {% for test_data in tests %}
             <td>
               {% if test_data.reflexive_percent %}
-                {{ test_data.reflexive_percent }} %
+                {{ test_data.reflexive_percent|floatformat:0 }} %
               {% else %}
                 -
               {% endif %}

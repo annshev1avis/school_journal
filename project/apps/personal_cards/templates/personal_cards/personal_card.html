@@ -66,6 +66,6 @@
     </table>
 
     <button type="submit" class="button">Сохранить</button>
-    <a href="{% url "personal_cards:get_pdf_card" card.id %}" class="button" target="_blank">Скачать в pdf</a>
+    <a href="{% url "personal_cards:download_card" card.id %}" class="button" target="_blank">Скачать в pdf</a>
   </form>
 {% endblock %}
