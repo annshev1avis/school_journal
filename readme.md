@@ -63,7 +63,7 @@ py -m venv venv
 venv/Scripts/activate
 
 # Установить зависимости
-pip install -r requirements.txt
+pip install -r requirements_dev.txt
 
 # Перейти в каталог project
 cd project
@@ -89,7 +89,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Установить зависимости
-pip install -r requirements.txt
+pip install -r requirements_dev.txt
 
 # Перейти в каталог project
 cd project

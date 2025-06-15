@@ -1,6 +1,6 @@
 django==4.2
 python-dotenv==1.0.1
 weasyprint==65.1
-pandas
-plotly
+pandas==2.3.0
+plotly==6.1.2
 django-debug-toolbar==5.2.0
